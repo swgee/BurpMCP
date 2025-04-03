@@ -42,33 +42,5 @@ public class MCPServer {
             .logger("custom-logger")
             .data("Custom log message")
             .build());
-
-        // Register resource for getting proxy history
-        syncServer.addResource(new SyncResourceSpecification(
-            new Resource(
-                "burp://proxy/history", 
-                "Proxy History", 
-                "application/json", 
-                "List of all proxy history in Burp Suite", 
-                null
-            ),
-            (exchange, request) -> {
-                try {
-                    List<Map<String, Object>> tabs = getRepeaterTabsInfo.get();
-                    String tabsJson = new ObjectMapper().writeValueAsString(tabs);
-                    
-                    return new McpSchema.ReadResourceResult(List.of(
-                        new McpSchema.TextResourceContents(
-                            "burp://repeater/tabs",
-                            "application/json",
-                            tabsJson
-                        )
-                    ));
-                } catch (Exception e) {
-                    logger.error("Error getting repeater tabs resource", e);
-                    throw new RuntimeException("Failed to get repeater tabs: " + e.getMessage());
-                }
-            }
-        ));
     }
 } 
