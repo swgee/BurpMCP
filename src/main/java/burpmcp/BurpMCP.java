@@ -26,6 +26,7 @@ public class BurpMCP implements BurpExtension {
     private JTable serverLogTable;
     private RequestDetailPanel detailPanel;
     private JToggleButton toggleButton;
+    private MCPServer mcpServer;
 
     @Override
     public void initialize(MontoyaApi api) {
@@ -35,6 +36,9 @@ public class BurpMCP implements BurpExtension {
         // Initialize our models
         requestListModel = new RequestListModel();
         serverLogListModel = new ServerLogListModel();
+        
+        // Initialize MCP server
+        mcpServer = new MCPServer(api);
         
         // Register context menu item
         api.userInterface().registerContextMenuItemsProvider(createContextMenuItemsProvider());
@@ -98,12 +102,38 @@ public class BurpMCP implements BurpExtension {
         
         // Add the toggle button at the top
         JPanel controlPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        toggleButton = new JToggleButton("Disabled");
+        toggleButton = new JToggleButton("MCP Server: Disabled");
         toggleButton.addActionListener(e -> {
             if (toggleButton.isSelected()) {
-                toggleButton.setText("Enabled");
+                mcpServer.start();
+                toggleButton.setText("MCP Server: Enabled");
+                // Add server info to the logs
+                serverLogListModel.addLog(
+                    "INFO", 
+                    "-", 
+                    "BurpMCP", 
+                    "-", 
+                    "-", 
+                    "SERVER_START", 
+                    "MCP Server started at " + mcpServer.getServerUrl() + 
+                    "\nSSE Endpoint: " + mcpServer.getSSEEndpoint() + 
+                    "\nMessage Endpoint: " + mcpServer.getMessageEndpoint()
+                );
+                serverLogTable.updateUI();
             } else {
-                toggleButton.setText("Disabled");
+                mcpServer.stop();
+                toggleButton.setText("MCP Server: Disabled");
+                // Add server stop info to the logs
+                serverLogListModel.addLog(
+                    "INFO", 
+                    "-", 
+                    "BurpMCP", 
+                    "-", 
+                    "-", 
+                    "SERVER_STOP", 
+                    "MCP Server stopped"
+                );
+                serverLogTable.updateUI();
             }
         });
         controlPanel.add(toggleButton);

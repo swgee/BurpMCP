@@ -18,6 +18,13 @@
   </properties>
 
   <dependencies>
+
+    <dependency>
+      <groupId>org.springframework.ai</groupId>
+      <artifactId>spring-ai-mcp-server-webflux-spring-boot-starter</artifactId>
+      <version>1.0.0-M6</version>
+    </dependency>
+
     <dependency>
       <groupId>net.portswigger.burp.extensions</groupId>
       <artifactId>montoya-api</artifactId>
@@ -93,7 +100,45 @@
           <artifactId>maven-project-info-reports-plugin</artifactId>
           <version>3.0.0</version>
         </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-assembly-plugin</artifactId>
+          <version>3.1.1</version>
+
+          <configuration>
+              <descriptorRefs>
+                  <descriptorRef>jar-with-dependencies</descriptorRef>
+              </descriptorRefs>
+          </configuration>
+
+          <executions>
+              <execution>
+                  <id>make-assembly</id>
+                  <phase>package</phase>
+                  <goals>
+                      <goal>single</goal>
+                  </goals>
+              </execution>
+          </executions>
+        </plugin>
       </plugins>
     </pluginManagement>
+    
+    <!-- Add this section to actually execute the assembly plugin -->
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>make-assembly</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
   </build>
 </project>
