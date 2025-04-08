@@ -39,7 +39,6 @@ public class MCPServer {
     private final String serverUrl = "http://localhost:8181"; // Server base URL
     private final String messagePath = "/mcp/message";
     private final String ssePath = "/mcp/sse";
-    private WebServer webServer;
     private reactor.netty.DisposableServer reactorServer;
     
     public MCPServer(MontoyaApi api) {
@@ -48,11 +47,12 @@ public class MCPServer {
     
     public void start() {
         if (isRunning) {
+            api.logging().logToOutput("MCP Server is already running");
             return;
         }
         
         try {
-            // Create a WebFlux-based SSE transport provider
+            // Create a WebFlux-based SSE transport provider with a new ObjectMapper each time
             this.transportProvider = new WebFluxSseServerTransportProvider(
                 new ObjectMapper(), 
                 messagePath, 
@@ -81,14 +81,18 @@ public class MCPServer {
             org.springframework.http.server.reactive.HttpHandler httpHandler = 
                 WebHttpHandlerBuilder.webHandler(webHandler).build();
             
-            // Create and start the Netty server directly
-            org.springframework.http.server.reactive.ReactorHttpHandlerAdapter adapter = 
-                new org.springframework.http.server.reactive.ReactorHttpHandlerAdapter(httpHandler);
+            // Create the adapter
+            ReactorHttpHandlerAdapter adapter = 
+                new ReactorHttpHandlerAdapter(httpHandler);
             
-            // Create and start the Reactor Netty HTTP server directly
-            this.reactorServer = reactor.netty.http.server.HttpServer.create()
+            // Configure a new HttpServer with socket options
+            HttpServer httpServer = HttpServer.create()
                 .host("localhost")
                 .port(8181)
+                .wiretap(true);  // Enables wiretap for debugging
+            
+            // Bind and store the server instance
+            this.reactorServer = httpServer
                 .handle(adapter)
                 .bindNow();
             
@@ -105,40 +109,58 @@ public class MCPServer {
             api.logging().logToOutput("Burp MCP Server started:");
             api.logging().logToOutput("- SSE endpoint: " + sseUrl);
             api.logging().logToOutput("- Message endpoint: " + messageUrl);
-            api.logging().logToOutput("To connect manually, clients should connect to: " + sseUrl);
             
             isRunning = true;
             
         } catch (Exception e) {
             api.logging().logToError("Failed to start MCP Server: " + e.getMessage(), e);
             logger.error("Failed to start MCP Server", e);
+            cleanup();  // Ensure cleanup on errors
         }
     }
     
     public void stop() {
-        if (!isRunning || syncServer == null) {
+        if (!isRunning) {
+            api.logging().logToOutput("MCP Server is not running");
             return;
         }
         
         try {
-            // Close the server gracefully
-            syncServer.closeGracefully();
-            
-            // Stop the Reactor Netty server
-            if (reactorServer != null) {
-                reactorServer.disposeNow();
-                reactorServer = null;
-            }
-            
-            syncServer = null;
-            transportProvider = null;
-            isRunning = false;
-            
+            cleanup();
             api.logging().logToOutput("Burp MCP Server stopped");
-            
         } catch (Exception e) {
             api.logging().logToError("Error stopping MCP Server: " + e.getMessage(), e);
             logger.error("Error stopping MCP Server", e);
+        }
+    }
+    
+    private void cleanup() {
+        try {
+            // Close the MCP server first
+            if (syncServer != null) {
+                syncServer.close(); // Use immediate close to ensure quick shutdown
+                syncServer = null;
+            }
+            
+            // Dispose the Reactor server
+            if (reactorServer != null) {
+                try {
+                    reactorServer.disposeNow();
+                } catch (Exception e) {
+                    logger.error("Error disposing reactor server", e);
+                }
+                reactorServer = null;
+            }
+            
+            // Release reference to transport provider
+            transportProvider = null;
+            
+            // Force garbage collection to release resources
+            System.gc();
+            
+            isRunning = false;
+        } catch (Exception e) {
+            logger.error("Error during cleanup", e);
         }
     }
     
@@ -156,17 +178,5 @@ public class MCPServer {
     
     public String getMessageEndpoint() {
         return messagePath;
-    }
-    
-    /**
-     * Get the router function for the WebFlux application.
-     * This would be used if integrating with a Spring WebFlux application.
-     */
-    public Object getRouterFunction() {
-        if (transportProvider != null) {
-            // Changed from specific type to Object to avoid type mismatch
-            return transportProvider.getRouterFunction();
-        }
-        return null;
     }
 }

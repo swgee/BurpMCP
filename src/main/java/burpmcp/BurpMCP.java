@@ -40,6 +40,13 @@ public class BurpMCP implements BurpExtension {
         // Initialize MCP server
         mcpServer = new MCPServer(api);
         
+        // Register unloading handler to stop server
+        api.extension().registerUnloadingHandler(() -> {
+            if (mcpServer.isRunning()) {
+                mcpServer.stop();
+            }
+        });
+        
         // Register context menu item
         api.userInterface().registerContextMenuItemsProvider(createContextMenuItemsProvider());
         
