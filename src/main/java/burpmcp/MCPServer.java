@@ -59,7 +59,11 @@ public class MCPServer {
                 ssePath
             );
             
-            // Create the MCP server with the WebFlux SSE transport
+            // Create HTTP Send tool
+            HttpSendTool httpSendTool = new HttpSendTool(api);
+            SyncToolSpecification httpSendToolSpec = httpSendTool.createToolSpecification();
+            
+            // Create the MCP server with the WebFlux SSE transport and tools
             this.syncServer = McpServer.sync(transportProvider)
                 .serverInfo("burp-mcp-server", "1.0.0")
                 .capabilities(ServerCapabilities.builder()
@@ -68,6 +72,7 @@ public class MCPServer {
                     .prompts(true)             // Enable prompt support
                     .logging()                 // Enable logging support
                     .build())
+                .tool(httpSendToolSpec.tool(), httpSendToolSpec.call()) // Add HTTP send tool
                 .build();
             
             // Get the router function from the transport provider
@@ -109,6 +114,7 @@ public class MCPServer {
             api.logging().logToOutput("Burp MCP Server started:");
             api.logging().logToOutput("- SSE endpoint: " + sseUrl);
             api.logging().logToOutput("- Message endpoint: " + messageUrl);
+            api.logging().logToOutput("- Registered tools: http-send");
             
             isRunning = true;
             
