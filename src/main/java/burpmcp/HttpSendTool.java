@@ -1,5 +1,6 @@
 package burpmcp;
 
+import java.net.http.HttpHeaders;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -9,6 +10,7 @@ import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.core.ByteArray;
 import burp.api.montoya.http.HttpMode;
 import burp.api.montoya.http.HttpService;
+import burp.api.montoya.http.message.HttpHeader;
 import burp.api.montoya.http.message.HttpRequestResponse;
 import burp.api.montoya.http.message.requests.HttpRequest;
 import io.modelcontextprotocol.server.McpServerFeatures.SyncToolSpecification;
@@ -40,9 +42,21 @@ public class HttpSendTool {
         {
             "type": "object",
             "properties": {
-                "request": {
+                "body": {
                     "type": "string",
-                    "description": "Raw HTTP request content"
+                    "description": "Body of the request"
+                },
+                "headers": {
+                    "type": "string",
+                    "description": "Newline separated HTTP headers."
+                },
+                "method": {
+                    "type": "string",
+                    "description": "HTTP method to use for the request"
+                },
+                "path": {
+                    "type": "string",
+                    "description": "Path of the request"
                 },
                 "host": {
                     "type": "string",
@@ -59,10 +73,10 @@ public class HttpSendTool {
                 "httpVersion": {
                     "type": "string",
                     "enum": ["HTTP_1", "HTTP_2"],
-                    "description": "HTTP protocol version to use"
+                    "description": "HTTP protocol version to use for the request"
                 }
             },
-            "required": ["request", "host", "port", "secure"]
+            "required": ["body", "headers", "method", "path", "host", "port", "secure", "httpVersion"]
         }
         """;
 
@@ -83,27 +97,54 @@ public class HttpSendTool {
      * @return The tool execution result
      */
     private CallToolResult handleToolCall(McpSyncServerExchange exchange, Map<String, Object> args) {
+
         try {
             // Validate and extract required arguments
+            /*
             if (!validateArguments(args)) {
                 return new CallToolResult(Collections.singletonList(
                     new TextContent("ERROR: Missing or invalid required parameters: request, host, port, secure")), true);
             }
+            */
 
-            String requestContent = args.get("request").toString();
+            String body = args.get("body").toString();
+            String headers = args.get("headers").toString();
+            String method = args.get("method").toString();
+            String path = args.get("path").toString();
             String host = args.get("host").toString();
             Integer port = ((Number) args.get("port")).intValue();
             Boolean secure = Boolean.valueOf(args.get("secure").toString());
-            
-            // Default to HTTP_1 if not specified
-            String httpVersionStr = args.containsKey("httpVersion") ? args.get("httpVersion").toString() : "HTTP_1";
-            HttpMode httpMode = getHttpMode(httpVersionStr);
+            HttpMode httpMode = getHttpMode(args.get("httpVersion").toString());
             
             // Create HTTP service for the target
             HttpService httpService = HttpService.httpService(host, port, secure);
             
             // Create HTTP request from raw content
-            HttpRequest httpRequest = HttpRequest.httpRequest(httpService, ByteArray.byteArray(requestContent));
+            HttpRequest httpRequest;
+            
+            if (httpMode == HttpMode.HTTP_2) {
+                List<HttpHeader> headersList = new ArrayList<>();
+                headersList.add(HttpHeader.httpHeader(":scheme", secure ? "https" : "http"));
+                headersList.add(HttpHeader.httpHeader(":method", method));
+                headersList.add(HttpHeader.httpHeader(":path", path));
+                
+                String[] headerStrings = headers.split("\n");
+                for (String headerString : headerStrings) {
+                    String[] parts = headerString.split(":", 2);
+                    if (parts.length == 2) {
+                        String name = parts[0].toLowerCase();
+                        String value = parts[1];
+                        // Remove only a single leading space if it exists
+                        if (value.startsWith(" ")) {
+                            value = value.substring(1);
+                        }
+                        headersList.add(HttpHeader.httpHeader(name, value));
+                    }
+                }
+                httpRequest = HttpRequest.http2Request(httpService, headersList, ByteArray.byteArray(body));
+            } else {
+                httpRequest = HttpRequest.httpRequest(httpService, ByteArray.byteArray(method + " " + path + " HTTP/1.1\r\n" + headers + "\r\n\r\n" + body));
+            }
             
             // Send the request using the specified HTTP mode
             HttpRequestResponse response = api.http().sendRequest(httpRequest, httpMode);
@@ -120,6 +161,7 @@ public class HttpSendTool {
                 new TextContent(responseContent)), false);
             
         } catch (Exception e) {
+            api.logging().logToError(e.getMessage());
             return new CallToolResult(Collections.singletonList(
                 new TextContent("ERROR: Error sending HTTP request: " + e.getMessage())), true);
         }
@@ -161,7 +203,8 @@ public class HttpSendTool {
     private HttpMode getHttpMode(String httpVersion) {
         return switch (httpVersion.toUpperCase()) {
             case "HTTP_2" -> HttpMode.HTTP_2;
-            default -> HttpMode.HTTP_1;
+            case "HTTP_1" -> HttpMode.HTTP_1;
+            default -> HttpMode.AUTO;
         };
     }
 }

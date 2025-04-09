@@ -52,6 +52,7 @@ public class BurpMCP implements BurpExtension {
         
         // Create the extension UI tab
         extensionPanel = createExtensionPanel();
+        toggleButton.doClick();
         api.userInterface().registerSuiteTab("BurpMCP", extensionPanel);
         
         api.logging().logToOutput("BurpMCP extension loaded successfully.");
