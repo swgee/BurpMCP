@@ -26,9 +26,10 @@ import io.modelcontextprotocol.spec.McpSchema.Tool;
 public class HttpSendTool {
 
     private final MontoyaApi api;
-
-    public HttpSendTool(MontoyaApi api) {
+    private final BurpMCP burpMCP;
+    public HttpSendTool(MontoyaApi api, BurpMCP burpMCP) {
         this.api = api;
+        this.burpMCP = burpMCP;
     }
 
     /**
@@ -161,7 +162,6 @@ public class HttpSendTool {
                 new TextContent(responseContent)), false);
             
         } catch (Exception e) {
-            api.logging().logToError(e.getMessage());
             return new CallToolResult(Collections.singletonList(
                 new TextContent("ERROR: Error sending HTTP request: " + e.getMessage())), true);
         }

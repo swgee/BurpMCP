@@ -32,6 +32,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class MCPServer {
     private final MontoyaApi api;
+    private final BurpMCP burpMCP;
     private final Logger logger = LoggerFactory.getLogger(MCPServer.class);
     private McpSyncServer syncServer;
     private WebFluxSseServerTransportProvider transportProvider;
@@ -41,8 +42,9 @@ public class MCPServer {
     private final String ssePath = "/mcp/sse";
     private reactor.netty.DisposableServer reactorServer;
     
-    public MCPServer(MontoyaApi api) {
+    public MCPServer(MontoyaApi api, BurpMCP burpMCP) {
         this.api = api;
+        this.burpMCP = burpMCP;
     }
     
     public void start() {
@@ -60,7 +62,7 @@ public class MCPServer {
             );
             
             // Create HTTP Send tool
-            HttpSendTool httpSendTool = new HttpSendTool(api);
+            HttpSendTool httpSendTool = new HttpSendTool(api, burpMCP);
             SyncToolSpecification httpSendToolSpec = httpSendTool.createToolSpecification();
             
             // Create the MCP server with the WebFlux SSE transport and tools
@@ -169,7 +171,7 @@ public class MCPServer {
             logger.error("Error during cleanup", e);
         }
     }
-    
+
     public boolean isRunning() {
         return isRunning;
     }

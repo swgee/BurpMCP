@@ -38,7 +38,7 @@ public class BurpMCP implements BurpExtension {
         serverLogListModel = new ServerLogListModel();
         
         // Initialize MCP server
-        mcpServer = new MCPServer(api);
+        mcpServer = new MCPServer(api, this);
         
         // Register unloading handler to stop server
         api.extension().registerUnloadingHandler(() -> {
@@ -55,7 +55,7 @@ public class BurpMCP implements BurpExtension {
         toggleButton.doClick();
         api.userInterface().registerSuiteTab("BurpMCP", extensionPanel);
         
-        api.logging().logToOutput("BurpMCP extension loaded successfully.");
+        api.logging().logToOutput("BurpMCP loaded successfully.");
     }
     
     private ContextMenuItemsProvider createContextMenuItemsProvider() {
@@ -115,32 +115,10 @@ public class BurpMCP implements BurpExtension {
             if (toggleButton.isSelected()) {
                 mcpServer.start();
                 toggleButton.setText("MCP Server: Enabled");
-                // Add server info to the logs
-                serverLogListModel.addLog(
-                    "INFO", 
-                    "-", 
-                    "BurpMCP", 
-                    "-", 
-                    "-", 
-                    "SERVER_START", 
-                    "MCP Server started at " + mcpServer.getServerUrl() + 
-                    "\nSSE Endpoint: " + mcpServer.getSSEEndpoint() + 
-                    "\nMessage Endpoint: " + mcpServer.getMessageEndpoint()
-                );
                 serverLogTable.updateUI();
             } else {
                 mcpServer.stop();
                 toggleButton.setText("MCP Server: Disabled");
-                // Add server stop info to the logs
-                serverLogListModel.addLog(
-                    "INFO", 
-                    "-", 
-                    "BurpMCP", 
-                    "-", 
-                    "-", 
-                    "SERVER_STOP", 
-                    "MCP Server stopped"
-                );
                 serverLogTable.updateUI();
             }
         });
@@ -252,5 +230,10 @@ public class BurpMCP implements BurpExtension {
         panel.add(splitPane, BorderLayout.CENTER);
         
         return panel;
+    }
+
+    public void writeToServerLog(String direction, String sessionId, String client, String method, String requestId, String type, String messageData) {
+        serverLogListModel.addLog(direction, sessionId, client, method, requestId, type, messageData);
+        serverLogTable.updateUI();
     }
 }
