@@ -6,6 +6,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import com.google.gson.Gson;
+
 import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.core.ByteArray;
 import burp.api.montoya.http.HttpMode;
@@ -15,6 +17,7 @@ import burp.api.montoya.http.message.HttpRequestResponse;
 import burp.api.montoya.http.message.requests.HttpRequest;
 import io.modelcontextprotocol.server.McpServerFeatures.SyncToolSpecification;
 import io.modelcontextprotocol.server.McpSyncServerExchange;
+import io.modelcontextprotocol.spec.McpSchema.CallToolRequest;
 import io.modelcontextprotocol.spec.McpSchema.CallToolResult;
 import io.modelcontextprotocol.spec.McpSchema.Content;
 import io.modelcontextprotocol.spec.McpSchema.TextContent;
@@ -49,7 +52,7 @@ public class HttpSendTool {
                 },
                 "headers": {
                     "type": "string",
-                    "description": "Newline separated HTTP headers."
+                    "description": "Newline separated HTTP headers. Unless specified otherwise, the host header should be included here. If using HTTP/2, don't use invalid headers according to the HTTP/2 specification."
                 },
                 "method": {
                     "type": "string",
@@ -98,7 +101,8 @@ public class HttpSendTool {
      * @return The tool execution result
      */
     private CallToolResult handleToolCall(McpSyncServerExchange exchange, Map<String, Object> args) {
-
+        CallToolResult result;
+        burpMCP.writeToServerLog("To server", exchange.getClientInfo().name()+" "+exchange.getClientInfo().version(), "Tool", "http-send", " - ", new Gson().toJson(args));
         try {
             // Validate and extract required arguments
             /*
@@ -152,19 +156,21 @@ public class HttpSendTool {
             
             // Process the response
             if (!response.hasResponse()) {
-                return new CallToolResult(Collections.singletonList(
+                result = new CallToolResult(Collections.singletonList(
                     new TextContent("ERROR: No response received. The request may have timed out or failed.")), true);
             }
             
             // Format and return the response
             String responseContent = response.response().toString();
-            return new CallToolResult(Collections.singletonList(
+            result = new CallToolResult(Collections.singletonList(
                 new TextContent(responseContent)), false);
             
         } catch (Exception e) {
-            return new CallToolResult(Collections.singletonList(
+            result = new CallToolResult(Collections.singletonList(
                 new TextContent("ERROR: Error sending HTTP request: " + e.getMessage())), true);
         }
+        burpMCP.writeToServerLog("To client", exchange.getClientInfo().name()+" "+exchange.getClientInfo().version(), "Tool", "http-send", result.isError().toString(), result.content().toString());
+        return result;
     }
     
     /**

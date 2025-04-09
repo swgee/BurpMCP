@@ -37,15 +37,13 @@ public class ServerLogTableModel extends AbstractTableModel {
             case 1:
                 return entry.getDirection();
             case 2:
-                return entry.getSessionId();
-            case 3:
                 return entry.getClient();
+            case 3:
+                return entry.getCapability();
             case 4:
-                return entry.getMethod();
+                return entry.getSpecification();
             case 5:
-                return entry.getRequestId();
-            case 6:
-                return entry.getType();
+                return entry.getError();
             default:
                 return null;
         }

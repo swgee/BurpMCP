@@ -18,6 +18,8 @@ public class ServerLogDetailPanel extends JPanel {
         messageDataArea = new JTextArea();
         messageDataArea.setEditable(false);
         messageDataArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
+        messageDataArea.setLineWrap(true);
+        messageDataArea.setWrapStyleWord(true);
         
         // Add to scroll pane
         JScrollPane scrollPane = new JScrollPane(messageDataArea);

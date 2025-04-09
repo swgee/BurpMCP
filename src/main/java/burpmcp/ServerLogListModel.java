@@ -12,8 +12,8 @@ public class ServerLogListModel {
         this.logs = new ArrayList<>();
     }
 
-    public void addLog(String direction, String sessionId, String client, String method, String requestId, String type, String messageData) {
-        ServerLogEntry entry = new ServerLogEntry(nextId++, ZonedDateTime.now(), direction, sessionId, client, method, requestId, type, messageData);
+    public void addLog(String direction, String client, String capability, String specification, String error, String messageData) {
+        ServerLogEntry entry = new ServerLogEntry(nextId++, ZonedDateTime.now(), direction, client, capability, specification, error, messageData);
         logs.add(entry);
     }
 
@@ -29,22 +29,21 @@ public class ServerLogListModel {
         private final int id;
         private final ZonedDateTime time;
         private final String direction;
-        private final String sessionId;
         private final String client;
-        private final String method;
-        private final String requestId;
-        private final String type;
+        private final String capability;
+        private final String specification;
+        private final String error;
         private final String messageData;
 
-        public ServerLogEntry(int id, ZonedDateTime time, String direction, String sessionId, String client, String method, String requestId, String type, String messageData) {
+        public ServerLogEntry(int id, ZonedDateTime time, String direction, String client, String capability, 
+                             String specification, String error, String messageData) {
             this.id = id;
             this.time = time;
             this.direction = direction;
-            this.sessionId = sessionId;
             this.client = client;
-            this.method = method;
-            this.requestId = requestId;
-            this.type = type;
+            this.capability = capability;
+            this.specification = specification;
+            this.error = error;
             this.messageData = messageData;
         }
 
@@ -60,24 +59,20 @@ public class ServerLogListModel {
             return direction;
         }
 
-        public String getSessionId() {
-            return sessionId;
-        }
-
         public String getClient() {
             return client;
         }
 
-        public String getMethod() {
-            return method;
+        public String getCapability() {
+            return capability;
         }
 
-        public String getRequestId() {
-            return requestId;
+        public String getSpecification() {
+            return specification;
         }
 
-        public String getType() {
-            return type;
+        public String getError() {
+            return error;
         }
 
         public String getMessageData() {

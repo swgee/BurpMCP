@@ -184,8 +184,8 @@ public class BurpMCP implements BurpExtension {
     private JPanel createServerLogsPanel() {
         JPanel panel = new JPanel(new BorderLayout());
         
-        // Create the server logs table
-        String[] columnNames = {"Time", "Direction", "Session ID", "Client", "Method", "Request ID", "Type"};
+        // Create the server logs table with updated column names
+        String[] columnNames = {"Time", "Direction", "Client", "Capability", "Specification", "Error"};
         ServerLogTableModel tableModel = new ServerLogTableModel(serverLogListModel, columnNames);
         serverLogTable = new JTable(tableModel);
         serverLogTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -193,11 +193,10 @@ public class BurpMCP implements BurpExtension {
         // Set column widths
         serverLogTable.getColumnModel().getColumn(0).setPreferredWidth(200);
         serverLogTable.getColumnModel().getColumn(1).setPreferredWidth(100);
-        serverLogTable.getColumnModel().getColumn(2).setPreferredWidth(100);
-        serverLogTable.getColumnModel().getColumn(3).setPreferredWidth(150);
-        serverLogTable.getColumnModel().getColumn(4).setPreferredWidth(80);
-        serverLogTable.getColumnModel().getColumn(5).setPreferredWidth(100);
-        serverLogTable.getColumnModel().getColumn(6).setPreferredWidth(150);
+        serverLogTable.getColumnModel().getColumn(2).setPreferredWidth(150);
+        serverLogTable.getColumnModel().getColumn(3).setPreferredWidth(150); 
+        serverLogTable.getColumnModel().getColumn(4).setPreferredWidth(200);
+        serverLogTable.getColumnModel().getColumn(5).setPreferredWidth(200);
         
         // Center all columns
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
@@ -232,8 +231,8 @@ public class BurpMCP implements BurpExtension {
         return panel;
     }
 
-    public void writeToServerLog(String direction, String sessionId, String client, String method, String requestId, String type, String messageData) {
-        serverLogListModel.addLog(direction, sessionId, client, method, requestId, type, messageData);
+    public void writeToServerLog(String direction, String client, String capability, String specification, String error, String messageData) {
+        serverLogListModel.addLog(direction, client, capability, specification, error, messageData);
         serverLogTable.updateUI();
     }
 }
