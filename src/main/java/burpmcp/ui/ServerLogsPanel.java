@@ -20,6 +20,7 @@ public class ServerLogsPanel extends JPanel {
         ServerLogTableModel tableModel = new ServerLogTableModel(serverLogListModel, columnNames);
         serverLogTable = new JTable(tableModel);
         serverLogTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        serverLogTable.setAutoCreateRowSorter(true);
         
         // Set column widths
         serverLogTable.getColumnModel().getColumn(0).setPreferredWidth(200);

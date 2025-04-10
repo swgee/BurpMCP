@@ -23,6 +23,7 @@ public class ResourceLogsPanel extends JPanel {
         RequestTableModel tableModel = new RequestTableModel(requestListModel, columnNames);
         requestTable = new JTable(tableModel);
         requestTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        requestTable.setAutoCreateRowSorter(true);
         
         // Set column widths
         requestTable.getColumnModel().getColumn(0).setPreferredWidth(50);
