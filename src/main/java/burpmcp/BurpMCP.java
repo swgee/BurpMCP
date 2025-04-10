@@ -9,20 +9,16 @@ import burp.api.montoya.ui.contextmenu.ContextMenuItemsProvider;
 import burp.api.montoya.ui.contextmenu.InvocationType;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import burpmcp.ui.RequestDetailPanel;
+import burpmcp.ui.ResourceLogsPanel;
 import burpmcp.ui.ServerLogDetailPanel;
+import burpmcp.ui.ServerLogsPanel;
 import burpmcp.models.RequestListModel;
-import burpmcp.models.RequestTableModel;
 import burpmcp.models.ServerLogListModel;
-import burpmcp.models.ServerLogTableModel;
 import burpmcp.tools.HttpSendTool;
 
 public class BurpMCP implements BurpExtension {
@@ -30,9 +26,8 @@ public class BurpMCP implements BurpExtension {
     private RequestListModel requestListModel;
     private ServerLogListModel serverLogListModel;
     private JPanel extensionPanel;
-    private JTable requestTable;
-    private JTable serverLogTable;
-    private RequestDetailPanel detailPanel;
+    private ResourceLogsPanel resourceLogsPanel;
+    private ServerLogsPanel serverLogsPanel;
     private JToggleButton toggleButton;
     private MCPServer mcpServer;
 
@@ -76,7 +71,7 @@ public class BurpMCP implements BurpExtension {
                     sendToExtensionItem.addActionListener(e -> {
                         for (HttpRequestResponse requestResponse : event.selectedRequestResponses()) {
                             requestListModel.addRequest(requestResponse);
-                            requestTable.updateUI();
+                            resourceLogsPanel.getRequestTable().updateUI();
                         }
                     });
                     
@@ -90,7 +85,7 @@ public class BurpMCP implements BurpExtension {
                         event.messageEditorRequestResponse().ifPresent(editor -> {
                             HttpRequestResponse requestResponse = editor.requestResponse();
                             requestListModel.addRequest(requestResponse);
-                            requestTable.updateUI();
+                            resourceLogsPanel.getRequestTable().updateUI();
                         });
                     });
                     
@@ -109,11 +104,11 @@ public class BurpMCP implements BurpExtension {
         JTabbedPane tabbedPane = new JTabbedPane();
         
         // Create Resources tab
-        JPanel resourcesPanel = createResourcesPanel();
-        tabbedPane.addTab("Resources", resourcesPanel);
+        resourceLogsPanel = new ResourceLogsPanel(api, requestListModel);
+        tabbedPane.addTab("Resources", resourceLogsPanel);
         
         // Create Server Logs tab
-        JPanel serverLogsPanel = createServerLogsPanel();
+        serverLogsPanel = new ServerLogsPanel(serverLogListModel);
         tabbedPane.addTab("Server Logs", serverLogsPanel);
         
         // Add the toggle button at the top
@@ -123,11 +118,11 @@ public class BurpMCP implements BurpExtension {
             if (toggleButton.isSelected()) {
                 mcpServer.start();
                 toggleButton.setText("MCP Server: Enabled");
-                serverLogTable.updateUI();
+                serverLogsPanel.getServerLogTable().updateUI();
             } else {
                 mcpServer.stop();
                 toggleButton.setText("MCP Server: Disabled");
-                serverLogTable.updateUI();
+                serverLogsPanel.getServerLogTable().updateUI();
             }
         });
         controlPanel.add(toggleButton);
@@ -137,112 +132,9 @@ public class BurpMCP implements BurpExtension {
         
         return panel;
     }
-    
-    private JPanel createResourcesPanel() {
-        JPanel panel = new JPanel(new BorderLayout());
-        
-        // Create the table with expanded columns including Status code and Response Length
-        String[] columnNames = {"ID", "Time", "Host", "Method", "Path", "Query", "Status", "Resp Len", "Notes"};
-        RequestTableModel tableModel = new RequestTableModel(requestListModel, columnNames);
-        requestTable = new JTable(tableModel);
-        requestTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        
-        // Set column widths
-        requestTable.getColumnModel().getColumn(0).setPreferredWidth(50);
-        requestTable.getColumnModel().getColumn(1).setPreferredWidth(180);
-        requestTable.getColumnModel().getColumn(2).setPreferredWidth(180);
-        requestTable.getColumnModel().getColumn(3).setPreferredWidth(80);
-        requestTable.getColumnModel().getColumn(4).setPreferredWidth(220);
-        requestTable.getColumnModel().getColumn(5).setPreferredWidth(220);
-        requestTable.getColumnModel().getColumn(6).setPreferredWidth(80);  // Status code
-        requestTable.getColumnModel().getColumn(7).setPreferredWidth(100); // Response Length
-        requestTable.getColumnModel().getColumn(8).setPreferredWidth(250); // Notes column
-        
-        // Center all columns
-        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-        centerRenderer.setHorizontalAlignment(JLabel.CENTER);
-        for (int i = 0; i < requestTable.getColumnCount(); i++) {
-            requestTable.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
-        }
-        
-        // Create a scroll pane for the table
-        JScrollPane tableScrollPane = new JScrollPane(requestTable);
-        
-        // Create the detail panel
-        detailPanel = new RequestDetailPanel(api);
-        
-        // Add selection listener to show request details
-        requestTable.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) {
-                int selectedRow = requestTable.getSelectedRow();
-                if (selectedRow >= 0) {
-                    HttpRequestResponse selectedRequest = requestListModel.getRequestAt(selectedRow);
-                    detailPanel.setRequest(selectedRequest, selectedRow, requestListModel);
-                }
-            }
-        });
-        
-        // Create a split pane to divide the table and details
-        JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, tableScrollPane, detailPanel);
-        splitPane.setResizeWeight(0.4); // Give 40% to the table
-        
-        panel.add(splitPane, BorderLayout.CENTER);
-        
-        return panel;
-    }
-    
-    private JPanel createServerLogsPanel() {
-        JPanel panel = new JPanel(new BorderLayout());
-        
-        // Create the server logs table with updated column names
-        String[] columnNames = {"Time", "Direction", "Client", "Capability", "Specification", "Error"};
-        ServerLogTableModel tableModel = new ServerLogTableModel(serverLogListModel, columnNames);
-        serverLogTable = new JTable(tableModel);
-        serverLogTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        
-        // Set column widths
-        serverLogTable.getColumnModel().getColumn(0).setPreferredWidth(200);
-        serverLogTable.getColumnModel().getColumn(1).setPreferredWidth(100);
-        serverLogTable.getColumnModel().getColumn(2).setPreferredWidth(150);
-        serverLogTable.getColumnModel().getColumn(3).setPreferredWidth(150); 
-        serverLogTable.getColumnModel().getColumn(4).setPreferredWidth(200);
-        serverLogTable.getColumnModel().getColumn(5).setPreferredWidth(200);
-        
-        // Center all columns
-        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-        centerRenderer.setHorizontalAlignment(JLabel.CENTER);
-        for (int i = 0; i < serverLogTable.getColumnCount(); i++) {
-            serverLogTable.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
-        }
-        
-        // Create a scroll pane for the table
-        JScrollPane tableScrollPane = new JScrollPane(serverLogTable);
-        
-        // Create the detail panel for message data
-        ServerLogDetailPanel detailPanel = new ServerLogDetailPanel();
-        
-        // Add selection listener to show message details
-        serverLogTable.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) {
-                int selectedRow = serverLogTable.getSelectedRow();
-                if (selectedRow >= 0) {
-                    String messageData = serverLogListModel.getEntry(selectedRow).getMessageData();
-                    detailPanel.setMessageData(messageData);
-                }
-            }
-        });
-        
-        // Create a split pane to divide the table and message data
-        JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, tableScrollPane, detailPanel);
-        splitPane.setResizeWeight(0.5); // 50-50 split
-        
-        panel.add(splitPane, BorderLayout.CENTER);
-        
-        return panel;
-    }
 
     public void writeToServerLog(String direction, String client, String capability, String specification, String error, String messageData) {
         serverLogListModel.addLog(direction, client, capability, specification, error, messageData);
-        serverLogTable.updateUI();
+        serverLogsPanel.getServerLogTable().updateUI();
     }
 }
