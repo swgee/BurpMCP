@@ -104,16 +104,8 @@ public class HttpSendTool {
      */
     private CallToolResult handleToolCall(McpSyncServerExchange exchange, Map<String, Object> args) {
         CallToolResult result;
-        burpMCP.writeToServerLog("To server", exchange.getClientInfo().name()+" "+exchange.getClientInfo().version(), "Tool", "http-send", " - ", new Gson().toJson(args));
+        burpMCP.writeToServerLog("To server", exchange.getClientInfo().name()+" "+exchange.getClientInfo().version(), "Tool", "http-send", new Gson().toJson(args));
         try {
-            // Validate and extract required arguments
-            /*
-            if (!validateArguments(args)) {
-                return new CallToolResult(Collections.singletonList(
-                    new TextContent("ERROR: Missing or invalid required parameters: request, host, port, secure")), true);
-            }
-            */
-
             String body = args.get("body").toString();
             String headers = args.get("headers").toString();
             String method = args.get("method").toString();
@@ -171,35 +163,8 @@ public class HttpSendTool {
             result = new CallToolResult(Collections.singletonList(
                 new TextContent("ERROR: Error sending HTTP request: " + e.getMessage())), true);
         }
-        burpMCP.writeToServerLog("To client", exchange.getClientInfo().name()+" "+exchange.getClientInfo().version(), "Tool", "http-send", result.isError().toString(), result.content().toString());
+        burpMCP.writeToServerLog("To client", exchange.getClientInfo().name()+" "+exchange.getClientInfo().version(), "Tool", "http-send", result.toString());
         return result;
-    }
-    
-    /**
-     * Validates that all required arguments are present and of the correct type
-     * 
-     * @param args The arguments to validate
-     * @return Whether validation passed
-     */
-    private boolean validateArguments(Map<String, Object> args) {
-        if (!args.containsKey("request") || !(args.get("request") instanceof String)) {
-            return false;
-        }
-        
-        if (!args.containsKey("host") || !(args.get("host") instanceof String)) {
-            return false;
-        }
-        
-        if (!args.containsKey("port") || !(args.get("port") instanceof Number)) {
-            return false;
-        }
-        
-        if (!args.containsKey("secure") || !(args.get("secure").toString().equalsIgnoreCase("true") || 
-                                            args.get("secure").toString().equalsIgnoreCase("false"))) {
-            return false;
-        }
-        
-        return true;
     }
     
     /**

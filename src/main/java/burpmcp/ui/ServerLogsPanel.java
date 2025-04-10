@@ -16,7 +16,7 @@ public class ServerLogsPanel extends JPanel {
         this.serverLogListModel = serverLogListModel;
         
         // Create the server logs table with updated column names
-        String[] columnNames = {"Time", "Direction", "Client", "Capability", "Specification", "Error"};
+        String[] columnNames = {"Time", "Direction", "Client", "Capability", "Specification"};
         ServerLogTableModel tableModel = new ServerLogTableModel(serverLogListModel, columnNames);
         serverLogTable = new JTable(tableModel);
         serverLogTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -27,7 +27,6 @@ public class ServerLogsPanel extends JPanel {
         serverLogTable.getColumnModel().getColumn(2).setPreferredWidth(150);
         serverLogTable.getColumnModel().getColumn(3).setPreferredWidth(150); 
         serverLogTable.getColumnModel().getColumn(4).setPreferredWidth(200);
-        serverLogTable.getColumnModel().getColumn(5).setPreferredWidth(200);
         
         // Center all columns
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();

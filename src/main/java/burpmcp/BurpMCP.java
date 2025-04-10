@@ -133,8 +133,8 @@ public class BurpMCP implements BurpExtension {
         return panel;
     }
 
-    public void writeToServerLog(String direction, String client, String capability, String specification, String error, String messageData) {
-        serverLogListModel.addLog(direction, client, capability, specification, error, messageData);
+    public void writeToServerLog(String direction, String client, String capability, String specification, String messageData) {
+        serverLogListModel.addLog(direction, client, capability, specification, messageData);
         serverLogsPanel.getServerLogTable().updateUI();
     }
 }

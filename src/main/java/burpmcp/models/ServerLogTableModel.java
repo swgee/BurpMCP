@@ -42,8 +42,6 @@ public class ServerLogTableModel extends AbstractTableModel {
                 return entry.getCapability();
             case 4:
                 return entry.getSpecification();
-            case 5:
-                return entry.getError();
             default:
                 return null;
         }
