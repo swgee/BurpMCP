@@ -1,4 +1,4 @@
-package burpmcp;
+package burpmcp.ui;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;

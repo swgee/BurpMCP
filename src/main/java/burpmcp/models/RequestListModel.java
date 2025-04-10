@@ -1,4 +1,4 @@
-package burpmcp;
+package burpmcp.model;
 
 import burp.api.montoya.http.message.HttpRequestResponse;
 

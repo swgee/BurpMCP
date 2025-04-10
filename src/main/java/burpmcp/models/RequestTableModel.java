@@ -1,4 +1,4 @@
-package burpmcp;
+package burpmcp.model;
 
 import javax.swing.table.AbstractTableModel;
 import java.time.format.DateTimeFormatter;

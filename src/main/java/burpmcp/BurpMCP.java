@@ -17,6 +17,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import burpmcp.ui.RequestDetailPanel;
+import burpmcp.ui.ServerLogDetailPanel;
+import burpmcp.models.RequestListModel;
+import burpmcp.models.RequestTableModel;
+import burpmcp.models.ServerLogListModel;
+import burpmcp.models.ServerLogTableModel;
+import burpmcp.tools.HttpSendTool;
+
 public class BurpMCP implements BurpExtension {
     private MontoyaApi api;
     private RequestListModel requestListModel;

@@ -1,4 +1,4 @@
-package burpmcp;
+package burpmcp.tools;
 
 import java.net.http.HttpHeaders;
 import java.util.ArrayList;
@@ -22,6 +22,8 @@ import io.modelcontextprotocol.spec.McpSchema.CallToolResult;
 import io.modelcontextprotocol.spec.McpSchema.Content;
 import io.modelcontextprotocol.spec.McpSchema.TextContent;
 import io.modelcontextprotocol.spec.McpSchema.Tool;
+
+import burpmcp.BurpMCP;
 
 /**
  * A tool for sending HTTP requests via BurpMCP

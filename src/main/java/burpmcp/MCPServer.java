@@ -30,6 +30,8 @@ import reactor.netty.http.server.HttpServer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import burpmcp.tools.HttpSendTool;
+
 public class MCPServer {
     private final MontoyaApi api;
     private final BurpMCP burpMCP;

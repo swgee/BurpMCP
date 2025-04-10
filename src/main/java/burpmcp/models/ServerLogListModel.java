@@ -1,4 +1,4 @@
-package burpmcp;
+package burpmcp.model;
 
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
