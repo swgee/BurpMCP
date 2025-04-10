@@ -141,20 +141,22 @@ public class BurpMCP implements BurpExtension {
     private JPanel createResourcesPanel() {
         JPanel panel = new JPanel(new BorderLayout());
         
-        // Create the table with expanded columns
-        String[] columnNames = {"ID", "Time", "Host", "Method", "Path", "Query", "Notes"};
+        // Create the table with expanded columns including Status code and Response Length
+        String[] columnNames = {"ID", "Time", "Host", "Method", "Path", "Query", "Status", "Resp Len", "Notes"};
         RequestTableModel tableModel = new RequestTableModel(requestListModel, columnNames);
         requestTable = new JTable(tableModel);
         requestTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         
         // Set column widths
         requestTable.getColumnModel().getColumn(0).setPreferredWidth(50);
-        requestTable.getColumnModel().getColumn(1).setPreferredWidth(200);
-        requestTable.getColumnModel().getColumn(2).setPreferredWidth(200);
+        requestTable.getColumnModel().getColumn(1).setPreferredWidth(180);
+        requestTable.getColumnModel().getColumn(2).setPreferredWidth(180);
         requestTable.getColumnModel().getColumn(3).setPreferredWidth(80);
-        requestTable.getColumnModel().getColumn(4).setPreferredWidth(250);
-        requestTable.getColumnModel().getColumn(5).setPreferredWidth(250);
-        requestTable.getColumnModel().getColumn(6).setPreferredWidth(300); // Notes column wider
+        requestTable.getColumnModel().getColumn(4).setPreferredWidth(220);
+        requestTable.getColumnModel().getColumn(5).setPreferredWidth(220);
+        requestTable.getColumnModel().getColumn(6).setPreferredWidth(80);  // Status code
+        requestTable.getColumnModel().getColumn(7).setPreferredWidth(100); // Response Length
+        requestTable.getColumnModel().getColumn(8).setPreferredWidth(250); // Notes column
         
         // Center all columns
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
