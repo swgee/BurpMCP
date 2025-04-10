@@ -4,14 +4,13 @@ import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.http.message.HttpRequestResponse;
 import burp.api.montoya.ui.editor.EditorOptions;
 import burp.api.montoya.ui.editor.HttpRequestEditor;
+import burpmcp.models.RequestListModel;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
-
-import burpmcp.model.RequestListModel;
 
 public class RequestDetailPanel extends JPanel {
     private final MontoyaApi api;
