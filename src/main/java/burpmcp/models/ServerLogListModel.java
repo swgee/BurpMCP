@@ -3,18 +3,27 @@ package burpmcp.models;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import javax.swing.table.AbstractTableModel;
 
 public class ServerLogListModel {
     private final List<ServerLogEntry> logs;
     private int nextId = 1;
+    private AbstractTableModel tableModel;
 
     public ServerLogListModel() {
         this.logs = new ArrayList<>();
     }
 
+    public void setTableModel(AbstractTableModel tableModel) {
+        this.tableModel = tableModel;
+    }
+
     public void addLog(String direction, String client, String capability, String specification, String messageData) {
         ServerLogEntry entry = new ServerLogEntry(nextId++, ZonedDateTime.now(), direction, client, capability, specification, messageData);
         logs.add(entry);
+        if (tableModel != null) {
+            tableModel.fireTableRowsInserted(logs.size() - 1, logs.size() - 1);
+        }
     }
 
     public int getRowCount() {

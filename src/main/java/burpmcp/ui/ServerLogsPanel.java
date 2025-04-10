@@ -16,18 +16,22 @@ public class ServerLogsPanel extends JPanel {
         this.serverLogListModel = serverLogListModel;
         
         // Create the server logs table with updated column names
-        String[] columnNames = {"Time", "Direction", "Client", "Capability", "Specification"};
+        String[] columnNames = {"ID", "Time", "Direction", "Client", "Capability", "Specification"};
         ServerLogTableModel tableModel = new ServerLogTableModel(serverLogListModel, columnNames);
         serverLogTable = new JTable(tableModel);
         serverLogTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         serverLogTable.setAutoCreateRowSorter(true);
         
+        // Connect the table model to the list model
+        serverLogListModel.setTableModel(tableModel);
+        
         // Set column widths
-        serverLogTable.getColumnModel().getColumn(0).setPreferredWidth(200);
-        serverLogTable.getColumnModel().getColumn(1).setPreferredWidth(100);
-        serverLogTable.getColumnModel().getColumn(2).setPreferredWidth(150);
-        serverLogTable.getColumnModel().getColumn(3).setPreferredWidth(150); 
-        serverLogTable.getColumnModel().getColumn(4).setPreferredWidth(200);
+        serverLogTable.getColumnModel().getColumn(0).setPreferredWidth(50);  // ID column
+        serverLogTable.getColumnModel().getColumn(1).setPreferredWidth(200);
+        serverLogTable.getColumnModel().getColumn(2).setPreferredWidth(100);
+        serverLogTable.getColumnModel().getColumn(3).setPreferredWidth(150);
+        serverLogTable.getColumnModel().getColumn(4).setPreferredWidth(150); 
+        serverLogTable.getColumnModel().getColumn(5).setPreferredWidth(200);
         
         // Center all columns
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
@@ -47,7 +51,9 @@ public class ServerLogsPanel extends JPanel {
             if (!e.getValueIsAdjusting()) {
                 int selectedRow = serverLogTable.getSelectedRow();
                 if (selectedRow >= 0) {
-                    String messageData = serverLogListModel.getEntry(selectedRow).getMessageData();
+                    // Convert view index to model index
+                    int modelRow = serverLogTable.convertRowIndexToModel(selectedRow);
+                    String messageData = serverLogListModel.getEntry(modelRow).getMessageData();
                     detailPanel.setMessageData(messageData);
                 }
             }

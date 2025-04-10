@@ -1,7 +1,7 @@
 package burpmcp.models;
 
 import burp.api.montoya.http.message.HttpRequestResponse;
-
+import javax.swing.table.AbstractTableModel;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,14 +9,22 @@ import java.util.List;
 public class RequestListModel {
     private final List<RequestEntry> requests;
     private int nextId = 1;
+    private AbstractTableModel tableModel;
 
     public RequestListModel() {
         this.requests = new ArrayList<>();
     }
 
+    public void setTableModel(AbstractTableModel tableModel) {
+        this.tableModel = tableModel;
+    }
+
     public void addRequest(HttpRequestResponse requestResponse) {
         RequestEntry entry = new RequestEntry(nextId++, ZonedDateTime.now(), requestResponse, "");
         requests.add(entry);
+        if (tableModel != null) {
+            tableModel.fireTableRowsInserted(requests.size() - 1, requests.size() - 1);
+        }
     }
 
     public int getRowCount() {

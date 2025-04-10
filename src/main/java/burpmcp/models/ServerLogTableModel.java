@@ -33,14 +33,16 @@ public class ServerLogTableModel extends AbstractTableModel {
         ServerLogListModel.ServerLogEntry entry = serverLogListModel.getEntry(rowIndex);
         switch (columnIndex) {
             case 0:
-                return DATE_TIME_FORMATTER.format(entry.getTime());
+                return entry.getId();
             case 1:
-                return entry.getDirection();
+                return DATE_TIME_FORMATTER.format(entry.getTime());
             case 2:
-                return entry.getClient();
+                return entry.getDirection();
             case 3:
-                return entry.getCapability();
+                return entry.getClient();
             case 4:
+                return entry.getCapability();
+            case 5:
                 return entry.getSpecification();
             default:
                 return null;

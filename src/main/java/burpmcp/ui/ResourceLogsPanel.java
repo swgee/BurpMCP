@@ -25,6 +25,9 @@ public class ResourceLogsPanel extends JPanel {
         requestTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         requestTable.setAutoCreateRowSorter(true);
         
+        // Connect the table model to the list model
+        requestListModel.setTableModel(tableModel);
+        
         // Set column widths
         requestTable.getColumnModel().getColumn(0).setPreferredWidth(50);
         requestTable.getColumnModel().getColumn(1).setPreferredWidth(180);
@@ -54,8 +57,10 @@ public class ResourceLogsPanel extends JPanel {
             if (!e.getValueIsAdjusting()) {
                 int selectedRow = requestTable.getSelectedRow();
                 if (selectedRow >= 0) {
-                    HttpRequestResponse selectedRequest = requestListModel.getRequestAt(selectedRow);
-                    detailPanel.setRequest(selectedRequest, selectedRow, requestListModel);
+                    // Convert view index to model index
+                    int modelRow = requestTable.convertRowIndexToModel(selectedRow);
+                    HttpRequestResponse selectedRequest = requestListModel.getRequestAt(modelRow);
+                    detailPanel.setRequest(selectedRequest, modelRow, requestListModel);
                 }
             }
         });
