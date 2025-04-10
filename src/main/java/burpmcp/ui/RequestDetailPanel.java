@@ -44,7 +44,7 @@ public class RequestDetailPanel extends JPanel {
         
         JScrollPane notesScrollPane = new JScrollPane(notesTextArea);
         notesPanel.add(notesScrollPane, BorderLayout.CENTER);
-        notesPanel.setPreferredSize(new Dimension(250, 0)); // Set preferred width
+        notesPanel.setPreferredSize(new Dimension(200, 0)); // Set preferred width
         
         // Create request and response editors
         requestEditor = api.userInterface().createHttpRequestEditor(EditorOptions.READ_ONLY);
@@ -63,7 +63,7 @@ public class RequestDetailPanel extends JPanel {
         add(detailSplitPane, BorderLayout.CENTER);
         
         // Add a label above the editor
-        JLabel titleLabel = new JLabel("Request/Response Details");
+        JLabel titleLabel = new JLabel("Details");
         titleLabel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         add(titleLabel, BorderLayout.NORTH);
     }

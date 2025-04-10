@@ -59,6 +59,20 @@ public class RequestTableModel extends AbstractTableModel {
                     return "";
                 }
             case 6:
+                try {
+                    return entry.getRequestResponse().hasResponse() ? 
+                           entry.getRequestResponse().response().statusCode() : "";
+                } catch (Exception e) {
+                    return "";
+                }
+            case 7:
+                try {
+                    return entry.getRequestResponse().hasResponse() ? 
+                           entry.getRequestResponse().response().body().length() : "";
+                } catch (Exception e) {
+                    return "";
+                }
+            case 8:
                 return entry.getNotes();
             default:
                 return null;
@@ -66,14 +80,8 @@ public class RequestTableModel extends AbstractTableModel {
     }
     
     @Override
-    public boolean isCellEditable(int rowIndex, int columnIndex) {
-        // Make Notes column editable
-        return columnIndex == 6;
-    }
-    
-    @Override
     public void setValueAt(Object value, int rowIndex, int columnIndex) {
-        if (columnIndex == 6) {
+        if (columnIndex == 8) {
             requestListModel.setNotes(rowIndex, (String) value);
             fireTableCellUpdated(rowIndex, columnIndex);
         }

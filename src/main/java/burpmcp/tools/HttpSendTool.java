@@ -50,7 +50,7 @@ public class HttpSendTool {
             "properties": {
                 "body": {
                     "type": "string",
-                    "description": "Body of the request"
+                    "description": "HTTP body part of the request"
                 },
                 "headers": {
                     "type": "string",
