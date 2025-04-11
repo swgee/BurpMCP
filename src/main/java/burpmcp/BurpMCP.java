@@ -13,11 +13,13 @@ import java.awt.*;
 import java.util.Collections;
 import java.util.List;
 
-import burpmcp.ui.RequestDetailPanel;
+import burpmcp.ui.ResourceDetailPanel;
+import burpmcp.ui.SentRequestLogsPanel;
 import burpmcp.ui.ResourceLogsPanel;
 import burpmcp.ui.ServerLogDetailPanel;
 import burpmcp.ui.ServerLogsPanel;
 import burpmcp.models.RequestListModel;
+import burpmcp.models.SentRequestListModel;
 import burpmcp.models.ServerLogListModel;
 import burpmcp.tools.HttpSendTool;
 
@@ -25,11 +27,15 @@ public class BurpMCP implements BurpExtension {
     private MontoyaApi api;
     private RequestListModel requestListModel;
     private ServerLogListModel serverLogListModel;
+    private SentRequestListModel sentRequestListModel;
     private JPanel extensionPanel;
     private ResourceLogsPanel resourceLogsPanel;
     private ServerLogsPanel serverLogsPanel;
+    private SentRequestLogsPanel requestLogsPanel;
     private JToggleButton toggleButton;
     private MCPServer mcpServer;
+    private JTextField hostField;
+    private JTextField portField;
 
     @Override
     public void initialize(MontoyaApi api) {
@@ -39,6 +45,7 @@ public class BurpMCP implements BurpExtension {
         // Initialize our models
         requestListModel = new RequestListModel();
         serverLogListModel = new ServerLogListModel();
+        sentRequestListModel = new SentRequestListModel();
         
         // Initialize MCP server
         mcpServer = new MCPServer(api, this);
@@ -107,24 +114,88 @@ public class BurpMCP implements BurpExtension {
         resourceLogsPanel = new ResourceLogsPanel(api, requestListModel);
         tabbedPane.addTab("Resources", resourceLogsPanel);
         
+        // Create Request Logs tab
+        requestLogsPanel = new SentRequestLogsPanel(api, sentRequestListModel);
+        tabbedPane.addTab("Request Logs", requestLogsPanel);
+        
         // Create Server Logs tab
         serverLogsPanel = new ServerLogsPanel(serverLogListModel);
         tabbedPane.addTab("Server Logs", serverLogsPanel);
         
-        // Add the toggle button at the top
+        // Add the control panel at the top
         JPanel controlPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        
+        // Create server configuration panel
+        JPanel configPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        configPanel.add(new JLabel("Host:"));
+        hostField = new JTextField("localhost", 15);
+        configPanel.add(hostField);
+        configPanel.add(new JLabel("Port:"));
+        portField = new JTextField("8181", 5);
+        configPanel.add(portField);
+        
+        // Create toggle button
         toggleButton = new JToggleButton("MCP Server: Disabled");
         toggleButton.addActionListener(e -> {
             if (toggleButton.isSelected()) {
-                mcpServer.start();
-                toggleButton.setText("MCP Server: Enabled");
-                serverLogsPanel.getServerLogTable().updateUI();
+                try {
+                    // Update server configuration
+                    String host = hostField.getText().trim();
+                    int port = Integer.parseInt(portField.getText().trim());
+                    mcpServer.setServerConfig(host, port);
+                    
+                    // Start server
+                    mcpServer.start();
+                    toggleButton.setText("MCP Server: Enabled");
+                    serverLogsPanel.getServerLogTable().updateUI();
+                    
+                    // Disable configuration fields
+                    hostField.setEnabled(false);
+                    portField.setEnabled(false);
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(extensionPanel, 
+                        "Invalid port number. Please enter a valid integer.", 
+                        "Configuration Error", 
+                        JOptionPane.ERROR_MESSAGE);
+                    toggleButton.setSelected(false);
+                } catch (IllegalStateException ex) {
+                    JOptionPane.showMessageDialog(extensionPanel, 
+                        ex.getMessage(), 
+                        "Server Error", 
+                        JOptionPane.ERROR_MESSAGE);
+                    toggleButton.setSelected(false);
+                } catch (Exception ex) {
+                    String errorMessage = ex.getMessage();
+                    if (errorMessage == null || errorMessage.isEmpty()) {
+                        errorMessage = "An unknown error occurred while starting the server.";
+                    }
+                    JOptionPane.showMessageDialog(extensionPanel, 
+                        errorMessage, 
+                        "Server Error", 
+                        JOptionPane.ERROR_MESSAGE);
+                    toggleButton.setSelected(false);
+                }
             } else {
-                mcpServer.stop();
-                toggleButton.setText("MCP Server: Disabled");
-                serverLogsPanel.getServerLogTable().updateUI();
+                try {
+                    mcpServer.stop();
+                    toggleButton.setText("MCP Server: Disabled");
+                    serverLogsPanel.getServerLogTable().updateUI();
+                    
+                    // Enable configuration fields
+                    hostField.setEnabled(true);
+                    portField.setEnabled(true);
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(extensionPanel, 
+                        "Error stopping server: " + ex.getMessage(), 
+                        "Server Error", 
+                        JOptionPane.ERROR_MESSAGE);
+                    toggleButton.setSelected(true); // Keep server running if stop failed
+                }
             }
         });
+        
+        // Add components to control panel
+        controlPanel.add(configPanel);
         controlPanel.add(toggleButton);
         
         panel.add(controlPanel, BorderLayout.NORTH);
@@ -136,5 +207,10 @@ public class BurpMCP implements BurpExtension {
     public void writeToServerLog(String direction, String client, String capability, String specification, String messageData) {
         serverLogListModel.addLog(direction, client, capability, specification, messageData);
         serverLogsPanel.getServerLogTable().updateUI();
+    }
+    
+    public void addSentRequest(HttpRequestResponse requestResponse) {
+        sentRequestListModel.addRequest(requestResponse);
+        requestLogsPanel.getSentRequestTable().updateUI();
     }
 }

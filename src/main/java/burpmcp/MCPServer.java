@@ -39,7 +39,8 @@ public class MCPServer {
     private McpSyncServer syncServer;
     private WebFluxSseServerTransportProvider transportProvider;
     private boolean isRunning = false;
-    private final String serverUrl = "http://localhost:8181"; // Server base URL
+    private String serverHost = "localhost";
+    private int serverPort = 8181;
     private final String messagePath = "/mcp/message";
     private final String ssePath = "/mcp/sse";
     private reactor.netty.DisposableServer reactorServer;
@@ -49,10 +50,20 @@ public class MCPServer {
         this.burpMCP = burpMCP;
     }
     
+    public void setServerConfig(String host, int port) {
+        if (!isRunning) {
+            this.serverHost = host;
+            this.serverPort = port;
+        }
+    }
+    
+    public String getServerUrl() {
+        return "http://" + serverHost + ":" + serverPort;
+    }
+    
     public void start() {
         if (isRunning) {
-            api.logging().logToOutput("MCP Server is already running");
-            return;
+            throw new IllegalStateException("MCP Server is already running");
         }
         
         try {
@@ -96,8 +107,8 @@ public class MCPServer {
             
             // Configure a new HttpServer with socket options
             HttpServer httpServer = HttpServer.create()
-                .host("localhost")
-                .port(8181)
+                .host(serverHost)
+                .port(serverPort)
                 .wiretap(true);  // Enables wiretap for debugging
             
             // Bind and store the server instance
@@ -113,19 +124,20 @@ public class MCPServer {
                 .build());
             
             // Log server initialization with URLs
-            String sseUrl = serverUrl + ssePath;
-            String messageUrl = serverUrl + messagePath;
+            String sseUrl = getServerUrl() + ssePath;
+            String messageUrl = getServerUrl() + messagePath;
             api.logging().logToOutput("Burp MCP Server started:");
             api.logging().logToOutput("- SSE endpoint: " + sseUrl);
             api.logging().logToOutput("- Message endpoint: " + messageUrl);
-            api.logging().logToOutput("- Registered tools: http-send");
             
             isRunning = true;
             
         } catch (Exception e) {
+            // Log the error for debugging
             api.logging().logToError("Failed to start MCP Server: " + e.getMessage(), e);
             logger.error("Failed to start MCP Server", e);
             cleanup();  // Ensure cleanup on errors
+            throw new RuntimeException("Failed to start MCP Server: " + e.getMessage(), e);
         }
     }
     
@@ -176,10 +188,6 @@ public class MCPServer {
 
     public boolean isRunning() {
         return isRunning;
-    }
-    
-    public String getServerUrl() {
-        return serverUrl;
     }
     
     public String getSSEEndpoint() {

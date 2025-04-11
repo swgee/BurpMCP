@@ -12,7 +12,7 @@ import java.awt.*;
 public class ResourceLogsPanel extends JPanel {
     private final RequestListModel requestListModel;
     private final JTable requestTable;
-    private final RequestDetailPanel detailPanel;
+    private final ResourceDetailPanel detailPanel;
 
     public ResourceLogsPanel(MontoyaApi api, RequestListModel requestListModel) {
         super(new BorderLayout());
@@ -50,7 +50,7 @@ public class ResourceLogsPanel extends JPanel {
         JScrollPane tableScrollPane = new JScrollPane(requestTable);
         
         // Create the detail panel
-        detailPanel = new RequestDetailPanel(api);
+        detailPanel = new ResourceDetailPanel(api);
         
         // Add selection listener to show request details
         requestTable.getSelectionModel().addListSelectionListener(e -> {

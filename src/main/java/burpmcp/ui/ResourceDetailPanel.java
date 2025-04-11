@@ -13,7 +13,7 @@ import java.awt.*;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 
-public class RequestDetailPanel extends JPanel {
+public class ResourceDetailPanel extends JPanel {
     private final MontoyaApi api;
     private final HttpRequestEditor requestEditor;
     private final HttpResponseEditor responseEditor;
@@ -21,7 +21,7 @@ public class RequestDetailPanel extends JPanel {
     private int currentRowIndex = -1;
     private RequestListModel requestListModel;
 
-    public RequestDetailPanel(MontoyaApi api) {
+    public ResourceDetailPanel(MontoyaApi api) {
         this.api = api;
         setLayout(new BorderLayout());
         
@@ -50,22 +50,18 @@ public class RequestDetailPanel extends JPanel {
         requestEditor = api.userInterface().createHttpRequestEditor(EditorOptions.READ_ONLY);
         responseEditor = api.userInterface().createHttpResponseEditor(EditorOptions.READ_ONLY);
         
-        // Create tabbed pane for request and response
-        JTabbedPane editorTabbedPane = new JTabbedPane();
-        editorTabbedPane.addTab("Request", requestEditor.uiComponent());
-        editorTabbedPane.addTab("Response", responseEditor.uiComponent());
+        // Create a split pane for request and response
+        JSplitPane editorSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, 
+                                                    requestEditor.uiComponent(), 
+                                                    responseEditor.uiComponent());
+        editorSplitPane.setResizeWeight(0.5); // 50-50 split
         
         // Create a split pane to divide notes and request/response view
-        JSplitPane detailSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, notesPanel, editorTabbedPane);
+        JSplitPane detailSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, notesPanel, editorSplitPane);
         detailSplitPane.setResizeWeight(0.2); // Give 20% to notes panel
         
         // Add the split pane to this panel
         add(detailSplitPane, BorderLayout.CENTER);
-        
-        // Add a label above the editor
-        JLabel titleLabel = new JLabel("Details");
-        titleLabel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-        add(titleLabel, BorderLayout.NORTH);
     }
 
     public void setRequest(HttpRequestResponse requestResponse, int rowIndex, RequestListModel model) {

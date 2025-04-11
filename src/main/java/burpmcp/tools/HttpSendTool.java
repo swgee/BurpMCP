@@ -147,6 +147,9 @@ public class HttpSendTool {
             
             // Send the request using the specified HTTP mode
             HttpRequestResponse response = api.http().sendRequest(httpRequest, httpMode);
+
+            // Log the sent request to the Request Logs tab
+            burpMCP.addSentRequest(response);
             
             // Process the response
             if (!response.hasResponse()) {
