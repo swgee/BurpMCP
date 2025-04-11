@@ -5,7 +5,7 @@ import burp.api.montoya.http.message.HttpRequestResponse;
 import burp.api.montoya.ui.editor.EditorOptions;
 import burp.api.montoya.ui.editor.HttpRequestEditor;
 import burp.api.montoya.ui.editor.HttpResponseEditor;
-import burpmcp.models.RequestListModel;
+import burpmcp.models.ResourceListModel;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -19,7 +19,7 @@ public class ResourceDetailPanel extends JPanel {
     private final HttpResponseEditor responseEditor;
     private final JTextArea notesTextArea;
     private int currentRowIndex = -1;
-    private RequestListModel requestListModel;
+    private ResourceListModel resourceListModel;
 
     public ResourceDetailPanel(MontoyaApi api) {
         this.api = api;
@@ -64,10 +64,10 @@ public class ResourceDetailPanel extends JPanel {
         add(detailSplitPane, BorderLayout.CENTER);
     }
 
-    public void setRequest(HttpRequestResponse requestResponse, int rowIndex, RequestListModel model) {
+    public void setRequest(HttpRequestResponse requestResponse, int rowIndex, ResourceListModel model) {
         if (requestResponse != null) {
             this.currentRowIndex = rowIndex;
-            this.requestListModel = model;
+            this.resourceListModel = model;
             
             // Set request
             requestEditor.setRequest(requestResponse.request());
@@ -85,8 +85,8 @@ public class ResourceDetailPanel extends JPanel {
     }
     
     private void saveNotes() {
-        if (currentRowIndex >= 0 && requestListModel != null) {
-            requestListModel.setNotes(currentRowIndex, notesTextArea.getText());
+        if (currentRowIndex >= 0 && resourceListModel != null) {
+            resourceListModel.setNotes(currentRowIndex, notesTextArea.getText());
         }
     }
 }

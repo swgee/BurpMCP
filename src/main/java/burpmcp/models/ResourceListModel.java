@@ -6,12 +6,12 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RequestListModel {
+public class ResourceListModel {
     private final List<RequestEntry> requests;
     private int nextId = 1;
     private AbstractTableModel tableModel;
 
-    public RequestListModel() {
+    public ResourceListModel() {
         this.requests = new ArrayList<>();
     }
 

@@ -3,19 +3,19 @@ package burpmcp.models;
 import javax.swing.table.AbstractTableModel;
 import java.time.format.DateTimeFormatter;
 
-public class RequestTableModel extends AbstractTableModel {
-    private final RequestListModel requestListModel;
+public class ResourceTableModel extends AbstractTableModel {
+    private final ResourceListModel resourceListModel;
     private final String[] columnNames;
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    public RequestTableModel(RequestListModel requestListModel, String[] columnNames) {
-        this.requestListModel = requestListModel;
+    public ResourceTableModel(ResourceListModel resourceListModel, String[] columnNames) {
+        this.resourceListModel = resourceListModel;
         this.columnNames = columnNames;
     }
 
     @Override
     public int getRowCount() {
-        return requestListModel.getRowCount();
+        return resourceListModel.getRowCount();
     }
 
     @Override
@@ -30,7 +30,7 @@ public class RequestTableModel extends AbstractTableModel {
 
     @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
-        RequestListModel.RequestEntry entry = requestListModel.getEntry(rowIndex);
+        ResourceListModel.RequestEntry entry = resourceListModel.getEntry(rowIndex);
         switch (columnIndex) {
             case 0:
                 return entry.getId();
@@ -82,7 +82,7 @@ public class RequestTableModel extends AbstractTableModel {
     @Override
     public void setValueAt(Object value, int rowIndex, int columnIndex) {
         if (columnIndex == 8) {
-            requestListModel.setNotes(rowIndex, (String) value);
+            resourceListModel.setNotes(rowIndex, (String) value);
             fireTableCellUpdated(rowIndex, columnIndex);
         }
     }

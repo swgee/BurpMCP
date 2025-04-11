@@ -4,7 +4,7 @@ import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.persistence.PersistedList;
 import burp.api.montoya.persistence.PersistedObject;
 import burp.api.montoya.http.message.HttpRequestResponse;
-import burpmcp.models.RequestListModel;
+import burpmcp.models.ResourceListModel;
 import burpmcp.models.SentRequestListModel;
 import burpmcp.models.ServerLogListModel;
 
@@ -30,7 +30,7 @@ public class BurpMCPPersistence {
     /**
      * Persists all data models
      */
-    public void saveState(RequestListModel resourcesModel, SentRequestListModel sentRequestsModel, ServerLogListModel serverLogsModel) {
+    public void saveState(ResourceListModel resourcesModel, SentRequestListModel sentRequestsModel, ServerLogListModel serverLogsModel) {
         // Save resource logs
         saveResources(resourcesModel);
         
@@ -44,7 +44,7 @@ public class BurpMCPPersistence {
     /**
      * Restores all data models from persistence
      */
-    public void restoreState(RequestListModel resourcesModel, SentRequestListModel sentRequestsModel, ServerLogListModel serverLogsModel) {
+    public void restoreState(ResourceListModel resourcesModel, SentRequestListModel sentRequestsModel, ServerLogListModel serverLogsModel) {
         // Restore resources
         restoreResources(resourcesModel);
         
@@ -58,7 +58,7 @@ public class BurpMCPPersistence {
     /**
      * Saves resource logs
      */
-    private void saveResources(RequestListModel resourcesModel) {
+    private void saveResources(ResourceListModel resourcesModel) {
         // Get or create the resources persisted object
         PersistedObject resourcesObj = persistedData.getChildObject("resources");
         if (resourcesObj == null) {
@@ -73,7 +73,7 @@ public class BurpMCPPersistence {
         
         // Populate the lists
         for (int i = 0; i < resourcesModel.getRowCount(); i++) {
-            RequestListModel.RequestEntry entry = resourcesModel.getEntry(i);
+            ResourceListModel.RequestEntry entry = resourcesModel.getEntry(i);
             requestResponses.add(entry.getRequestResponse());
             notes.add(entry.getNotes());
             times.add(entry.getTime().format(DATE_TIME_FORMATTER));
@@ -88,7 +88,7 @@ public class BurpMCPPersistence {
     /**
      * Restores resource logs
      */
-    private void restoreResources(RequestListModel resourcesModel) {
+    private void restoreResources(ResourceListModel resourcesModel) {
         PersistedObject resourcesObj = persistedData.getChildObject("resources");
         if (resourcesObj == null) return;
         

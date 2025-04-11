@@ -6,7 +6,7 @@ import io.modelcontextprotocol.server.McpServer;
 import io.modelcontextprotocol.server.McpSyncServer;
 import io.modelcontextprotocol.server.transport.WebFluxSseServerTransportProvider;
 import io.modelcontextprotocol.server.McpServerFeatures.SyncToolSpecification;
-
+import io.modelcontextprotocol.server.McpServerFeatures.SyncResourceSpecification;
 import io.modelcontextprotocol.spec.McpSchema.Tool;
 import io.modelcontextprotocol.spec.McpSchema.Resource;
 import io.modelcontextprotocol.spec.McpSchema.CallToolResult;
@@ -31,6 +31,7 @@ import reactor.netty.http.server.HttpServer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import burpmcp.tools.HttpSendTool;
+import burpmcp.models.ResourceListModel;
 
 public class MCPServer {
     private final MontoyaApi api;
@@ -44,10 +45,15 @@ public class MCPServer {
     private final String messagePath = "/mcp/message";
     private final String ssePath = "/mcp/sse";
     private reactor.netty.DisposableServer reactorServer;
+    private ResourceListModel resourceListModel;
     
     public MCPServer(MontoyaApi api, BurpMCP burpMCP) {
         this.api = api;
         this.burpMCP = burpMCP;
+    }
+    
+    public void setResourceListModel(ResourceListModel resourceListModel) {
+        this.resourceListModel = resourceListModel;
     }
     
     public void setServerConfig(String host, int port) {
@@ -78,6 +84,17 @@ public class MCPServer {
             HttpSendTool httpSendTool = new HttpSendTool(api, burpMCP);
             SyncToolSpecification httpSendToolSpec = httpSendTool.createToolSpecification();
             
+            // Create request resource specification
+            // Ensure resourceListModel is set before starting the server
+            if (resourceListModel == null) {
+                throw new IllegalStateException("ResourceListModel must be set before starting the server");
+            }
+            
+            // Create resource specification for requests
+            burpmcp.resources.RequestResponseResource requestResourceSpec = 
+                new burpmcp.resources.RequestResponseResource(api, burpMCP, resourceListModel);
+            SyncResourceSpecification requestResource = requestResourceSpec.createResourceSpecification();
+            
             // Create the MCP server with the WebFlux SSE transport and tools
             this.syncServer = McpServer.sync(transportProvider)
                 .serverInfo("burp-mcp-server", "1.0.0")
@@ -88,6 +105,7 @@ public class MCPServer {
                     .logging()                 // Enable logging support
                     .build())
                 .tool(httpSendToolSpec.tool(), httpSendToolSpec.call()) // Add HTTP send tool
+                .resources(requestResource)   // Add request resource
                 .build();
             
             // Get the router function from the transport provider

@@ -2,31 +2,31 @@ package burpmcp.ui;
 
 import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.http.message.HttpRequestResponse;
-import burpmcp.models.RequestListModel;
-import burpmcp.models.RequestTableModel;
+import burpmcp.models.ResourceListModel;
+import burpmcp.models.ResourceTableModel;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
 
 public class ResourceLogsPanel extends JPanel {
-    private final RequestListModel requestListModel;
+    private final ResourceListModel resourceListModel;
     private final JTable requestTable;
     private final ResourceDetailPanel detailPanel;
 
-    public ResourceLogsPanel(MontoyaApi api, RequestListModel requestListModel) {
+    public ResourceLogsPanel(MontoyaApi api, ResourceListModel resourceListModel) {
         super(new BorderLayout());
-        this.requestListModel = requestListModel;
+        this.resourceListModel = resourceListModel;
         
         // Create the table with expanded columns including Status code and Response Length
         String[] columnNames = {"ID", "Time", "Host", "Method", "Path", "Query", "Status", "Resp Len", "Notes"};
-        RequestTableModel tableModel = new RequestTableModel(requestListModel, columnNames);
+        ResourceTableModel tableModel = new ResourceTableModel(resourceListModel, columnNames);
         requestTable = new JTable(tableModel);
         requestTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         requestTable.setAutoCreateRowSorter(true);
         
         // Connect the table model to the list model
-        requestListModel.setTableModel(tableModel);
+        resourceListModel.setTableModel(tableModel);
         
         // Set column widths
         requestTable.getColumnModel().getColumn(0).setPreferredWidth(50);
@@ -59,8 +59,8 @@ public class ResourceLogsPanel extends JPanel {
                 if (selectedRow >= 0) {
                     // Convert view index to model index
                     int modelRow = requestTable.convertRowIndexToModel(selectedRow);
-                    HttpRequestResponse selectedRequest = requestListModel.getRequestAt(modelRow);
-                    detailPanel.setRequest(selectedRequest, modelRow, requestListModel);
+                    HttpRequestResponse selectedRequest = resourceListModel.getRequestAt(modelRow);
+                    detailPanel.setRequest(selectedRequest, modelRow, resourceListModel);
                 }
             }
         });
