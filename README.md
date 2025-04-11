@@ -63,7 +63,7 @@ For some examples of using the extension successfully, check out the [examples](
 
 Special thanks to the following for providing some examples:
 
-- @hunterverhelst
+- [hunterverhelst](https://github.com/hunterverhelst)
 
 ## Common Issues
 
@@ -71,7 +71,7 @@ Special thanks to the following for providing some examples:
 
 ## Tool Definitions
 
-The Tool specifications can be found in [src/main/java/burpmcp/tools](src/main/java/burpmcp/tools) and describe exactly what data the MCP server expects from the LLMs. This information is important to understand so you know what the LLMs are sending. You can modify the property descriptions depending on your use case which would require rebuilding the extension.
+The tool specifications can be found in [src/main/java/burpmcp/tools](src/main/java/burpmcp/tools) and describe exactly what data the MCP server expects from the LLMs. This information is important to understand so you know what the LLMs are sending. You can modify the property descriptions depending on your use case which would require rebuilding the extension.
 
 ## Building from Source
 
