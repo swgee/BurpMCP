@@ -1,0 +1,136 @@
+package burpmcp.tools;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import burp.api.montoya.MontoyaApi;
+import burp.api.montoya.http.message.HttpRequestResponse;
+import burpmcp.BurpMCP;
+import burpmcp.models.ResourceListModel;
+import io.modelcontextprotocol.server.McpServerFeatures.SyncToolSpecification;
+import io.modelcontextprotocol.server.McpSyncServerExchange;
+import io.modelcontextprotocol.spec.McpSchema.CallToolResult;
+import io.modelcontextprotocol.spec.McpSchema.TextContent;
+import io.modelcontextprotocol.spec.McpSchema.Tool;
+
+/**
+ * A tool that retrieves stored request/response content from BurpMCP's resource list.
+ * This tool functions as an alternative to the RequestResponseResource for clients
+ * that don't support resources.
+ */
+public class RetrieveResourceTool {
+    private final MontoyaApi api;
+    private final BurpMCP burpMCP;
+    private final ResourceListModel resourceListModel;
+
+    public RetrieveResourceTool(MontoyaApi api, BurpMCP burpMCP, ResourceListModel resourceListModel) {
+        this.api = api;
+        this.burpMCP = burpMCP;
+        this.resourceListModel = resourceListModel;
+    }
+
+    /**
+     * Creates a Tool specification for retrieving request/response content by ID
+     * 
+     * @return A SyncToolSpecification for accessing request/response content
+     */
+    public SyncToolSpecification createToolSpecification() {
+        // Define the JSON schema for the tool input
+        String schema = """
+        {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "description": "ID of the request/response resource to retrieve"
+                }
+            },
+            "required": ["id"]
+        }
+        """;
+
+        Tool retrieveResourceTool = new Tool(
+                "get-resource",
+                "Retrieves a stored request/response pair and any notes from the resource list by ID",
+                schema);
+
+        // Create the tool specification with the handler function
+        return new SyncToolSpecification(retrieveResourceTool, this::handleToolCall);
+    }
+
+    /**
+     * Tool handler function that retrieves request/response content by ID
+     * 
+     * @param exchange The server exchange
+     * @param args The tool arguments
+     * @return The tool execution result
+     */
+    private CallToolResult handleToolCall(McpSyncServerExchange exchange, Map<String, Object> args) {
+        burpMCP.writeToServerLog("To server", exchange.getClientInfo().name() + " " + exchange.getClientInfo().version(), 
+                "Tool", "get-resource", args.toString());
+        
+        try {
+            // Extract the request ID from arguments
+            int requestId;
+            try {
+                if (args.get("id") instanceof Integer) {
+                    requestId = (Integer) args.get("id");
+                } else if (args.get("id") instanceof Number) {
+                    requestId = ((Number) args.get("id")).intValue();
+                } else {
+                    requestId = Integer.parseInt(args.get("id").toString());
+                }
+            } catch (NumberFormatException | NullPointerException e) {
+                return new CallToolResult(Collections.singletonList(
+                    new TextContent("ERROR: Invalid resource ID. Please provide a valid integer ID.")), true);
+            }
+            
+            // Find the request with matching ID
+            ResourceListModel.RequestEntry entry = null;
+            for (int i = 0; i < resourceListModel.getRowCount(); i++) {
+                ResourceListModel.RequestEntry currentEntry = resourceListModel.getEntry(i);
+                if (currentEntry.getId() == requestId) {
+                    entry = currentEntry;
+                    break;
+                }
+            }
+            
+            if (entry == null) {
+                return new CallToolResult(Collections.singletonList(
+                    new TextContent("ERROR: Request ID not found: " + requestId)), true);
+            }
+            
+            // Get the request, response, and notes data
+            HttpRequestResponse requestResponse = entry.getRequestResponse();
+            String requestContent = requestResponse.request().toString();
+            
+            String responseContent = requestResponse.hasResponse() ? 
+                    requestResponse.response().toString() : "No response available";
+            
+            String notes = entry.getNotes();
+            
+            // Combine the data into a single response
+            StringBuilder combinedContent = new StringBuilder();
+            combinedContent.append("=== REQUEST ===\n");
+            combinedContent.append(requestContent);
+            combinedContent.append("\n\n=== RESPONSE ===\n");
+            combinedContent.append(responseContent);
+            combinedContent.append("\n\n=== NOTES ===\n");
+            combinedContent.append(notes);
+            
+            // Create the result
+            CallToolResult result = new CallToolResult(Collections.singletonList(new TextContent(combinedContent.toString())), false);
+            
+            burpMCP.writeToServerLog("To client", exchange.getClientInfo().name() + " " + exchange.getClientInfo().version(), 
+                    "Tool", "get-resource", "Returning data for ID: " + requestId);
+            
+            return result;
+            
+        } catch (Exception e) {
+            return new CallToolResult(Collections.singletonList(
+                new TextContent("ERROR: " + e.getMessage())), true);
+        }
+    }
+}

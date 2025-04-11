@@ -31,6 +31,7 @@ import reactor.netty.http.server.HttpServer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import burpmcp.tools.HttpSendTool;
+import burpmcp.tools.RetrieveResourceTool;
 import burpmcp.models.ResourceListModel;
 
 public class MCPServer {
@@ -83,6 +84,10 @@ public class MCPServer {
             // Create HTTP Send tool
             HttpSendTool httpSendTool = new HttpSendTool(api, burpMCP);
             SyncToolSpecification httpSendToolSpec = httpSendTool.createToolSpecification();
+
+            // Create Retrieve Resource tool
+            RetrieveResourceTool retrieveResourceTool = new RetrieveResourceTool(api, burpMCP, resourceListModel);
+            SyncToolSpecification retrieveResourceToolSpec = retrieveResourceTool.createToolSpecification();
             
             // Create request resource specification
             // Ensure resourceListModel is set before starting the server
@@ -105,6 +110,7 @@ public class MCPServer {
                     .logging()                 // Enable logging support
                     .build())
                 .tool(httpSendToolSpec.tool(), httpSendToolSpec.call()) // Add HTTP send tool
+                .tool(retrieveResourceToolSpec.tool(), retrieveResourceToolSpec.call()) // Add retrieve resource tool
                 .resources(requestResource)   // Add request resource
                 .build();
             
