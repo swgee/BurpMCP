@@ -25,7 +25,13 @@ The MCP server runs by default on localhost port 8181 over SSE. The configuratio
 }
 ```
 
-To use BurpMCP with Claude Desktop, download the `stdio-bridge.py` script and add the following configuration to your `claude_desktop_config.json`. Make sure the host and port match what you configure in BurpMCP.
+To use BurpMCP with Claude Desktop, download the `stdio-bridge.py` script and install the required dependencies:
+
+```sh
+pip3 install typer mcp
+```
+
+Then, add the following configuration to your `claude_desktop_config.json`. Make sure the host and port match what you configure in BurpMCP.
 
 ```json
 {
