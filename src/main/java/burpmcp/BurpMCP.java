@@ -2,34 +2,30 @@ package burpmcp;
 
 import burp.api.montoya.BurpExtension;
 import burp.api.montoya.MontoyaApi;
-import burp.api.montoya.core.Registration;
 import burp.api.montoya.http.message.HttpRequestResponse;
 import burp.api.montoya.ui.contextmenu.ContextMenuEvent;
 import burp.api.montoya.ui.contextmenu.ContextMenuItemsProvider;
-import burp.api.montoya.ui.contextmenu.InvocationType;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.Collections;
 import java.util.List;
+import java.time.ZonedDateTime;
 
-import burpmcp.ui.ResourceDetailPanel;
 import burpmcp.ui.SentRequestLogsPanel;
-import burpmcp.ui.ResourceLogsPanel;
-import burpmcp.ui.ServerLogDetailPanel;
+import burpmcp.ui.SavedRequestLogsPanel;
 import burpmcp.ui.ServerLogsPanel;
-import burpmcp.models.ResourceListModel;
+import burpmcp.models.SavedRequestListModel;
 import burpmcp.models.SentRequestListModel;
 import burpmcp.models.ServerLogListModel;
-import burpmcp.tools.HttpSendTool;
 
 public class BurpMCP implements BurpExtension {
     private MontoyaApi api;
-    private ResourceListModel resourceListModel;
+    private SavedRequestListModel savedRequestListModel;
     private ServerLogListModel serverLogListModel;
     private SentRequestListModel sentRequestListModel;
     private JPanel extensionPanel;
-    private ResourceLogsPanel resourceLogsPanel;
+    private SavedRequestLogsPanel savedRequestLogsPanel;
     private ServerLogsPanel serverLogsPanel;
     private SentRequestLogsPanel requestLogsPanel;
     private JToggleButton toggleButton;
@@ -45,16 +41,16 @@ public class BurpMCP implements BurpExtension {
         persistence = new BurpMCPPersistence(api);
         
         // Initialize our models
-        resourceListModel = new ResourceListModel();
+        savedRequestListModel = new SavedRequestListModel();
         serverLogListModel = new ServerLogListModel();
         sentRequestListModel = new SentRequestListModel();
         
         // Restore state from persistence
-        persistence.restoreState(resourceListModel, sentRequestListModel, serverLogListModel);
+        persistence.restoreState(savedRequestListModel, sentRequestListModel, serverLogListModel);
         
         // Initialize MCP server
         mcpServer = new MCPServer(api, this);
-        mcpServer.setResourceListModel(resourceListModel);
+        mcpServer.setSavedRequestListModel(savedRequestListModel);
         
         // Register unloading handler to stop server
         api.extension().registerUnloadingHandler(() -> {
@@ -62,7 +58,7 @@ public class BurpMCP implements BurpExtension {
                 mcpServer.stop();
             }
             // Save the current state before unloading
-            persistence.saveState(resourceListModel, sentRequestListModel, serverLogListModel);
+            persistence.saveState(savedRequestListModel, sentRequestListModel, serverLogListModel);
         });
         
         // Register context menu item
@@ -85,8 +81,8 @@ public class BurpMCP implements BurpExtension {
                     JMenuItem sendToExtensionItem = new JMenuItem("Send to BurpMCP");
                     sendToExtensionItem.addActionListener(e -> {
                         for (HttpRequestResponse requestResponse : event.selectedRequestResponses()) {
-                            resourceListModel.addRequest(requestResponse);
-                            resourceLogsPanel.getRequestTable().updateUI();
+                            savedRequestListModel.addRequest(requestResponse, ZonedDateTime.now());
+                            savedRequestLogsPanel.getRequestTable().updateUI();
                         }
                     });
                     
@@ -99,8 +95,8 @@ public class BurpMCP implements BurpExtension {
                     sendToExtensionItem.addActionListener(e -> {
                         event.messageEditorRequestResponse().ifPresent(editor -> {
                             HttpRequestResponse requestResponse = editor.requestResponse();
-                            resourceListModel.addRequest(requestResponse);
-                            resourceLogsPanel.getRequestTable().updateUI();
+                            savedRequestListModel.addRequest(requestResponse, ZonedDateTime.now());
+                            savedRequestLogsPanel.getRequestTable().updateUI();
                         });
                     });
                     
@@ -118,9 +114,9 @@ public class BurpMCP implements BurpExtension {
         // Create tabbed pane
         JTabbedPane tabbedPane = new JTabbedPane();
         
-        // Create Resources tab
-        resourceLogsPanel = new ResourceLogsPanel(api, resourceListModel);
-        tabbedPane.addTab("Resources", resourceLogsPanel);
+        // Create Saved Requests tab
+        savedRequestLogsPanel = new SavedRequestLogsPanel(api, savedRequestListModel);
+        tabbedPane.addTab("Saved Requests", savedRequestLogsPanel);
         
         // Create Request Logs tab
         requestLogsPanel = new SentRequestLogsPanel(api, sentRequestListModel);
@@ -228,12 +224,12 @@ public class BurpMCP implements BurpExtension {
     }
 
     public void writeToServerLog(String direction, String client, String capability, String specification, String messageData) {
-        serverLogListModel.addLog(direction, client, capability, specification, messageData);
+        serverLogListModel.addLog(ZonedDateTime.now(), direction, client, capability, specification, messageData);
         serverLogsPanel.getServerLogTable().updateUI();
     }
     
     public void addSentRequest(HttpRequestResponse requestResponse) {
-        sentRequestListModel.addRequest(requestResponse);
+        sentRequestListModel.addRequest(requestResponse, ZonedDateTime.now());
         requestLogsPanel.getSentRequestTable().updateUI();
     }
 }

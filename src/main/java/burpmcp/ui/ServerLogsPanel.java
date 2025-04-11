@@ -63,6 +63,17 @@ public class ServerLogsPanel extends JPanel {
         JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, tableScrollPane, detailPanel);
         splitPane.setResizeWeight(0.5); // 50-50 split
         
+        // Create a panel for the clear button
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        JButton clearButton = new JButton("Clear Server Logs");
+        clearButton.addActionListener(e -> {
+            serverLogListModel.clear();
+            serverLogTable.updateUI();
+        });
+        buttonPanel.add(clearButton);
+        
+        // Add the button panel and split pane
+        add(buttonPanel, BorderLayout.NORTH);
         add(splitPane, BorderLayout.CENTER);
     }
 

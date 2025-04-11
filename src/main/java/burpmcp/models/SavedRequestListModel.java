@@ -6,12 +6,12 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ResourceListModel {
+public class SavedRequestListModel {
     private final List<RequestEntry> requests;
     private int nextId = 1;
     private AbstractTableModel tableModel;
 
-    public ResourceListModel() {
+    public SavedRequestListModel() {
         this.requests = new ArrayList<>();
     }
 
@@ -19,8 +19,12 @@ public class ResourceListModel {
         this.tableModel = tableModel;
     }
 
-    public void addRequest(HttpRequestResponse requestResponse) {
-        RequestEntry entry = new RequestEntry(nextId++, ZonedDateTime.now(), requestResponse, "");
+    public AbstractTableModel getTableModel() {
+        return tableModel;
+    }
+
+    public void addRequest(HttpRequestResponse requestResponse, ZonedDateTime time) {
+        RequestEntry entry = new RequestEntry(nextId++, time, requestResponse, "");
         requests.add(entry);
         if (tableModel != null) {
             tableModel.fireTableRowsInserted(requests.size() - 1, requests.size() - 1);
@@ -50,6 +54,14 @@ public class ResourceListModel {
             return requests.get(rowIndex).getNotes();
         }
         return "";
+    }
+
+    public void clear() {
+        requests.clear();
+        nextId = 1;
+        if (tableModel != null) {
+            tableModel.fireTableDataChanged();
+        }
     }
 
     public static class RequestEntry {

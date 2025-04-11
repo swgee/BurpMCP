@@ -27,6 +27,7 @@ public class SentRequestDetailPanel extends JPanel {
                                                     requestEditor.uiComponent(), 
                                                     responseEditor.uiComponent());
         editorSplitPane.setResizeWeight(0.5); // 50-50 split
+        editorSplitPane.setPreferredSize(new Dimension(0, 150));
         
         // Add the split pane to this panel
         add(editorSplitPane, BorderLayout.CENTER);

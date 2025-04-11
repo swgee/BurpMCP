@@ -29,6 +29,14 @@ public class ServerLogTableModel extends AbstractTableModel {
     }
 
     @Override
+    public Class<?> getColumnClass(int columnIndex) {
+        if (columnIndex == 0) { // ID column
+            return Integer.class;
+        }
+        return String.class;
+    }
+
+    @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
         ServerLogListModel.ServerLogEntry entry = serverLogListModel.getEntry(rowIndex);
         switch (columnIndex) {

@@ -5,7 +5,7 @@ import burp.api.montoya.http.message.HttpRequestResponse;
 import burp.api.montoya.ui.editor.EditorOptions;
 import burp.api.montoya.ui.editor.HttpRequestEditor;
 import burp.api.montoya.ui.editor.HttpResponseEditor;
-import burpmcp.models.ResourceListModel;
+import burpmcp.models.SavedRequestListModel;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -13,15 +13,15 @@ import java.awt.*;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 
-public class ResourceDetailPanel extends JPanel {
+public class SavedRequestDetailPanel extends JPanel {
     private final MontoyaApi api;
     private final HttpRequestEditor requestEditor;
     private final HttpResponseEditor responseEditor;
     private final JTextArea notesTextArea;
     private int currentRowIndex = -1;
-    private ResourceListModel resourceListModel;
+    private SavedRequestListModel savedRequestListModel;
 
-    public ResourceDetailPanel(MontoyaApi api) {
+    public SavedRequestDetailPanel(MontoyaApi api) {
         this.api = api;
         setLayout(new BorderLayout());
         
@@ -59,15 +59,15 @@ public class ResourceDetailPanel extends JPanel {
         // Create a split pane to divide notes and request/response view
         JSplitPane detailSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, notesPanel, editorSplitPane);
         detailSplitPane.setResizeWeight(0.2); // Give 20% to notes panel
-        
+        detailSplitPane.setPreferredSize(new Dimension(0, 150));
         // Add the split pane to this panel
         add(detailSplitPane, BorderLayout.CENTER);
     }
 
-    public void setRequest(HttpRequestResponse requestResponse, int rowIndex, ResourceListModel model) {
+    public void setRequest(HttpRequestResponse requestResponse, int rowIndex, SavedRequestListModel model) {
         if (requestResponse != null) {
             this.currentRowIndex = rowIndex;
-            this.resourceListModel = model;
+            this.savedRequestListModel = model;
             
             // Set request
             requestEditor.setRequest(requestResponse.request());
@@ -85,8 +85,8 @@ public class ResourceDetailPanel extends JPanel {
     }
     
     private void saveNotes() {
-        if (currentRowIndex >= 0 && resourceListModel != null) {
-            resourceListModel.setNotes(currentRowIndex, notesTextArea.getText());
+        if (currentRowIndex >= 0 && savedRequestListModel != null) {
+            savedRequestListModel.setNotes(currentRowIndex, notesTextArea.getText());
         }
     }
 }

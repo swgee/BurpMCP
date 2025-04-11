@@ -4,15 +4,12 @@ import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.persistence.PersistedList;
 import burp.api.montoya.persistence.PersistedObject;
 import burp.api.montoya.http.message.HttpRequestResponse;
-import burpmcp.models.ResourceListModel;
+import burpmcp.models.SavedRequestListModel;
 import burpmcp.models.SentRequestListModel;
 import burpmcp.models.ServerLogListModel;
 
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.ArrayList;
-
+import java.time.ZonedDateTime;
 /**
  * Handles persistence of BurpMCP's data within the Burp project
  */
@@ -30,9 +27,9 @@ public class BurpMCPPersistence {
     /**
      * Persists all data models
      */
-    public void saveState(ResourceListModel resourcesModel, SentRequestListModel sentRequestsModel, ServerLogListModel serverLogsModel) {
-        // Save resource logs
-        saveResources(resourcesModel);
+    public void saveState(SavedRequestListModel savedRequestsModel, SentRequestListModel sentRequestsModel, ServerLogListModel serverLogsModel) {
+        // Save saved request logs
+        saveSavedRequests(savedRequestsModel);
         
         // Save request logs
         saveRequestLogs(sentRequestsModel);
@@ -44,9 +41,9 @@ public class BurpMCPPersistence {
     /**
      * Restores all data models from persistence
      */
-    public void restoreState(ResourceListModel resourcesModel, SentRequestListModel sentRequestsModel, ServerLogListModel serverLogsModel) {
-        // Restore resources
-        restoreResources(resourcesModel);
+    public void restoreState(SavedRequestListModel savedRequestsModel, SentRequestListModel sentRequestsModel, ServerLogListModel serverLogsModel) {
+        // Restore saved requests
+        restoreSavedRequests(savedRequestsModel);
         
         // Restore request logs
         restoreRequestLogs(sentRequestsModel);
@@ -56,46 +53,46 @@ public class BurpMCPPersistence {
     }
     
     /**
-     * Saves resource logs
+     * Saves saved request logs
      */
-    private void saveResources(ResourceListModel resourcesModel) {
-        // Get or create the resources persisted object
-        PersistedObject resourcesObj = persistedData.getChildObject("resources");
-        if (resourcesObj == null) {
-            resourcesObj = PersistedObject.persistedObject();
-            persistedData.setChildObject("resources", resourcesObj);
+    private void saveSavedRequests(SavedRequestListModel savedRequestsModel) {
+        // Get or create the saved requests persisted object
+        PersistedObject savedRequestsObj = persistedData.getChildObject("savedRequests");
+        if (savedRequestsObj == null) {
+            savedRequestsObj = PersistedObject.persistedObject();
+            persistedData.setChildObject("savedRequests", savedRequestsObj);
         }
         
-        // Create lists for the resources data
+        // Create lists for the saved requests data
         PersistedList<HttpRequestResponse> requestResponses = PersistedList.persistedHttpRequestResponseList();
         PersistedList<String> notes = PersistedList.persistedStringList();
         PersistedList<String> times = PersistedList.persistedStringList();
         
         // Populate the lists
-        for (int i = 0; i < resourcesModel.getRowCount(); i++) {
-            ResourceListModel.RequestEntry entry = resourcesModel.getEntry(i);
+        for (int i = 0; i < savedRequestsModel.getRowCount(); i++) {
+            SavedRequestListModel.RequestEntry entry = savedRequestsModel.getEntry(i);
             requestResponses.add(entry.getRequestResponse());
             notes.add(entry.getNotes());
             times.add(entry.getTime().format(DATE_TIME_FORMATTER));
         }
         
         // Save the lists to persistence
-        resourcesObj.setHttpRequestResponseList("requestResponses", requestResponses);
-        resourcesObj.setStringList("notes", notes);
-        resourcesObj.setStringList("times", times);
+        savedRequestsObj.setHttpRequestResponseList("requestResponses", requestResponses);
+        savedRequestsObj.setStringList("notes", notes);
+        savedRequestsObj.setStringList("times", times);
     }
     
     /**
-     * Restores resource logs
+     * Restores saved request logs
      */
-    private void restoreResources(ResourceListModel resourcesModel) {
-        PersistedObject resourcesObj = persistedData.getChildObject("resources");
-        if (resourcesObj == null) return;
+    private void restoreSavedRequests(SavedRequestListModel savedRequestsModel) {
+        PersistedObject savedRequestsObj = persistedData.getChildObject("savedRequests");
+        if (savedRequestsObj == null) return;
         
         // Retrieve the lists
-        PersistedList<HttpRequestResponse> requestResponses = resourcesObj.getHttpRequestResponseList("requestResponses");
-        PersistedList<String> notes = resourcesObj.getStringList("notes");
-        PersistedList<String> times = resourcesObj.getStringList("times");
+        PersistedList<HttpRequestResponse> requestResponses = savedRequestsObj.getHttpRequestResponseList("requestResponses");
+        PersistedList<String> notes = savedRequestsObj.getStringList("notes");
+        PersistedList<String> times = savedRequestsObj.getStringList("times");
         
         if (requestResponses == null || notes == null || times == null ||
             requestResponses.size() != notes.size() || notes.size() != times.size()) {
@@ -105,11 +102,11 @@ public class BurpMCPPersistence {
         // Loop through and add each request to the model
         for (int i = 0; i < requestResponses.size(); i++) {
             // Add the request to the model
-            resourcesModel.addRequest(requestResponses.get(i));
+            savedRequestsModel.addRequest(requestResponses.get(i), ZonedDateTime.parse(times.get(i), DATE_TIME_FORMATTER));
             
             // Set the notes for the entry (last entry added)
-            int lastIndex = resourcesModel.getRowCount() - 1;
-            resourcesModel.setNotes(lastIndex, notes.get(i));
+            int lastIndex = savedRequestsModel.getRowCount() - 1;
+            savedRequestsModel.setNotes(lastIndex, notes.get(i));
         }
     }
     
@@ -158,7 +155,7 @@ public class BurpMCPPersistence {
         // Loop through and add each request to the model
         for (int i = 0; i < requestResponses.size(); i++) {
             // Add the request to the model
-            sentRequestsModel.addRequest(requestResponses.get(i));
+            sentRequestsModel.addRequest(requestResponses.get(i), ZonedDateTime.parse(times.get(i), DATE_TIME_FORMATTER));
         }
     }
     
@@ -228,6 +225,7 @@ public class BurpMCPPersistence {
         // Loop through and add each log to the model
         for (int i = 0; i < directions.size(); i++) {
             serverLogsModel.addLog(
+                ZonedDateTime.parse(times.get(i), DATE_TIME_FORMATTER),
                 directions.get(i),
                 clients.get(i),
                 capabilities.get(i),

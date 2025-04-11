@@ -6,11 +6,6 @@ import io.modelcontextprotocol.server.McpServer;
 import io.modelcontextprotocol.server.McpSyncServer;
 import io.modelcontextprotocol.server.transport.WebFluxSseServerTransportProvider;
 import io.modelcontextprotocol.server.McpServerFeatures.SyncToolSpecification;
-import io.modelcontextprotocol.server.McpServerFeatures.SyncResourceSpecification;
-import io.modelcontextprotocol.spec.McpSchema.Tool;
-import io.modelcontextprotocol.spec.McpSchema.Resource;
-import io.modelcontextprotocol.spec.McpSchema.CallToolResult;
-import io.modelcontextprotocol.spec.McpSchema.TextContent;
 import io.modelcontextprotocol.spec.McpSchema.ServerCapabilities;
 import io.modelcontextprotocol.spec.McpSchema.LoggingLevel;
 import io.modelcontextprotocol.spec.McpSchema.LoggingMessageNotification;
@@ -18,10 +13,6 @@ import io.modelcontextprotocol.spec.McpSchema.LoggingMessageNotification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.reactive.function.server.RouterFunction;
-import org.springframework.web.reactive.function.server.ServerResponse;
-import org.springframework.boot.web.reactive.context.ReactiveWebServerApplicationContext;
-import org.springframework.boot.web.embedded.netty.NettyReactiveWebServerFactory;
-import org.springframework.boot.web.server.WebServer;
 import org.springframework.web.reactive.function.server.RouterFunctions;
 import org.springframework.web.reactive.function.server.HandlerStrategies;
 import org.springframework.web.server.adapter.WebHttpHandlerBuilder;
@@ -31,8 +22,9 @@ import reactor.netty.http.server.HttpServer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import burpmcp.tools.HttpSendTool;
-import burpmcp.tools.RetrieveResourceTool;
-import burpmcp.models.ResourceListModel;
+import burpmcp.tools.GetSavedRequestTool;
+import burpmcp.tools.UpdateNoteTool;
+import burpmcp.models.SavedRequestListModel;
 
 public class MCPServer {
     private final MontoyaApi api;
@@ -46,15 +38,15 @@ public class MCPServer {
     private final String messagePath = "/mcp/message";
     private final String ssePath = "/mcp/sse";
     private reactor.netty.DisposableServer reactorServer;
-    private ResourceListModel resourceListModel;
+    private SavedRequestListModel savedRequestListModel;
     
     public MCPServer(MontoyaApi api, BurpMCP burpMCP) {
         this.api = api;
         this.burpMCP = burpMCP;
     }
     
-    public void setResourceListModel(ResourceListModel resourceListModel) {
-        this.resourceListModel = resourceListModel;
+    public void setSavedRequestListModel(SavedRequestListModel savedRequestListModel) {
+        this.savedRequestListModel = savedRequestListModel;
     }
     
     public void setServerConfig(String host, int port) {
@@ -85,33 +77,30 @@ public class MCPServer {
             HttpSendTool httpSendTool = new HttpSendTool(api, burpMCP);
             SyncToolSpecification httpSendToolSpec = httpSendTool.createToolSpecification();
 
-            // Create Retrieve Resource tool
-            RetrieveResourceTool retrieveResourceTool = new RetrieveResourceTool(api, burpMCP, resourceListModel);
-            SyncToolSpecification retrieveResourceToolSpec = retrieveResourceTool.createToolSpecification();
+            // Create Retrieve Saved Request tool
+            GetSavedRequestTool retrieveSavedRequestTool = new GetSavedRequestTool(burpMCP, savedRequestListModel);
+            SyncToolSpecification retrieveSavedRequestToolSpec = retrieveSavedRequestTool.createToolSpecification();
+
+            // Create Update Note tool
+            UpdateNoteTool updateNoteTool = new UpdateNoteTool(burpMCP, savedRequestListModel);
+            SyncToolSpecification updateNoteToolSpec = updateNoteTool.createToolSpecification();
             
-            // Create request resource specification
-            // Ensure resourceListModel is set before starting the server
-            if (resourceListModel == null) {
-                throw new IllegalStateException("ResourceListModel must be set before starting the server");
+            // Create request saved request specification
+            // Ensure savedRequestListModel is set before starting the server
+            if (savedRequestListModel == null) {
+                throw new IllegalStateException("SavedRequestListModel must be set before starting the server");
             }
-            
-            // Create resource specification for requests
-            burpmcp.resources.RequestResponseResource requestResourceSpec = 
-                new burpmcp.resources.RequestResponseResource(api, burpMCP, resourceListModel);
-            SyncResourceSpecification requestResource = requestResourceSpec.createResourceSpecification();
             
             // Create the MCP server with the WebFlux SSE transport and tools
             this.syncServer = McpServer.sync(transportProvider)
                 .serverInfo("burp-mcp-server", "1.0.0")
                 .capabilities(ServerCapabilities.builder()
-                    .resources(true, true)     // Enable resource support
                     .tools(true)               // Enable tool support
-                    .prompts(true)             // Enable prompt support
                     .logging()                 // Enable logging support
                     .build())
                 .tool(httpSendToolSpec.tool(), httpSendToolSpec.call()) // Add HTTP send tool
-                .tool(retrieveResourceToolSpec.tool(), retrieveResourceToolSpec.call()) // Add retrieve resource tool
-                .resources(requestResource)   // Add request resource
+                .tool(retrieveSavedRequestToolSpec.tool(), retrieveSavedRequestToolSpec.call()) // Add retrieve saved request tool
+                .tool(updateNoteToolSpec.tool(), updateNoteToolSpec.call()) // Add update note tool
                 .build();
             
             // Get the router function from the transport provider

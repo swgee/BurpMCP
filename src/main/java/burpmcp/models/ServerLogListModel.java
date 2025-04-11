@@ -18,8 +18,8 @@ public class ServerLogListModel {
         this.tableModel = tableModel;
     }
 
-    public void addLog(String direction, String client, String capability, String specification, String messageData) {
-        ServerLogEntry entry = new ServerLogEntry(nextId++, ZonedDateTime.now(), direction, client, capability, specification, messageData);
+    public void addLog(ZonedDateTime time, String direction, String client, String capability, String specification, String messageData) {
+        ServerLogEntry entry = new ServerLogEntry(nextId++, time, direction, client, capability, specification, messageData);
         logs.add(entry);
         if (tableModel != null) {
             tableModel.fireTableRowsInserted(logs.size() - 1, logs.size() - 1);
@@ -32,6 +32,14 @@ public class ServerLogListModel {
 
     public ServerLogEntry getEntry(int rowIndex) {
         return logs.get(rowIndex);
+    }
+
+    public void clear() {
+        logs.clear();
+        nextId = 1;
+        if (tableModel != null) {
+            tableModel.fireTableDataChanged();
+        }
     }
 
     public static class ServerLogEntry {

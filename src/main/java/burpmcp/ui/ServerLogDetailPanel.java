@@ -23,6 +23,7 @@ public class ServerLogDetailPanel extends JPanel {
         
         // Add to scroll pane
         JScrollPane scrollPane = new JScrollPane(messageDataArea);
+        scrollPane.setPreferredSize(new Dimension(0, 150));
         add(scrollPane, BorderLayout.CENTER);
     }
 

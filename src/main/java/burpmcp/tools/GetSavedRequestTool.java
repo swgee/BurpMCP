@@ -1,14 +1,12 @@
 package burpmcp.tools;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.http.message.HttpRequestResponse;
 import burpmcp.BurpMCP;
-import burpmcp.models.ResourceListModel;
+import burpmcp.models.SavedRequestListModel;
 import io.modelcontextprotocol.server.McpServerFeatures.SyncToolSpecification;
 import io.modelcontextprotocol.server.McpSyncServerExchange;
 import io.modelcontextprotocol.spec.McpSchema.CallToolResult;
@@ -16,19 +14,17 @@ import io.modelcontextprotocol.spec.McpSchema.TextContent;
 import io.modelcontextprotocol.spec.McpSchema.Tool;
 
 /**
- * A tool that retrieves stored request/response content from BurpMCP's resource list.
- * This tool functions as an alternative to the RequestResponseResource for clients
- * that don't support resources.
+ * A tool that retrieves stored request/response content from BurpMCP's saved request list.
+ * This tool functions as an alternative to the RequestResponseSavedRequest for clients
+ * that don't support saved requests.
  */
-public class RetrieveResourceTool {
-    private final MontoyaApi api;
+public class GetSavedRequestTool {
     private final BurpMCP burpMCP;
-    private final ResourceListModel resourceListModel;
+    private final SavedRequestListModel savedRequestListModel;
 
-    public RetrieveResourceTool(MontoyaApi api, BurpMCP burpMCP, ResourceListModel resourceListModel) {
-        this.api = api;
+    public GetSavedRequestTool(BurpMCP burpMCP, SavedRequestListModel savedRequestListModel) {
         this.burpMCP = burpMCP;
-        this.resourceListModel = resourceListModel;
+        this.savedRequestListModel = savedRequestListModel;
     }
 
     /**
@@ -44,20 +40,20 @@ public class RetrieveResourceTool {
             "properties": {
                 "id": {
                     "type": "integer",
-                    "description": "ID of the request/response resource to retrieve"
+                    "description": "ID of the request/response pair to retrieve"
                 }
             },
             "required": ["id"]
         }
         """;
 
-        Tool retrieveResourceTool = new Tool(
-                "get-resource",
-                "Retrieves a stored request/response pair and any notes from the resource list by ID",
+        Tool retrieveSavedRequestTool = new Tool(
+                "get-saved-request",
+                "Retrieves a stored request/response pair and any notes from the saved request list by ID",
                 schema);
 
         // Create the tool specification with the handler function
-        return new SyncToolSpecification(retrieveResourceTool, this::handleToolCall);
+        return new SyncToolSpecification(retrieveSavedRequestTool, this::handleToolCall);
     }
 
     /**
@@ -69,7 +65,7 @@ public class RetrieveResourceTool {
      */
     private CallToolResult handleToolCall(McpSyncServerExchange exchange, Map<String, Object> args) {
         burpMCP.writeToServerLog("To server", exchange.getClientInfo().name() + " " + exchange.getClientInfo().version(), 
-                "Tool", "get-resource", args.toString());
+                "Tool", "get-saved-request", args.toString());
         
         try {
             // Extract the request ID from arguments
@@ -84,13 +80,13 @@ public class RetrieveResourceTool {
                 }
             } catch (NumberFormatException | NullPointerException e) {
                 return new CallToolResult(Collections.singletonList(
-                    new TextContent("ERROR: Invalid resource ID. Please provide a valid integer ID.")), true);
+                    new TextContent("ERROR: Invalid saved request ID. Please provide a valid integer ID.")), true);
             }
             
             // Find the request with matching ID
-            ResourceListModel.RequestEntry entry = null;
-            for (int i = 0; i < resourceListModel.getRowCount(); i++) {
-                ResourceListModel.RequestEntry currentEntry = resourceListModel.getEntry(i);
+            SavedRequestListModel.RequestEntry entry = null;
+            for (int i = 0; i < savedRequestListModel.getRowCount(); i++) {
+                SavedRequestListModel.RequestEntry currentEntry = savedRequestListModel.getEntry(i);
                 if (currentEntry.getId() == requestId) {
                     entry = currentEntry;
                     break;
@@ -124,7 +120,7 @@ public class RetrieveResourceTool {
             CallToolResult result = new CallToolResult(Collections.singletonList(new TextContent(combinedContent.toString())), false);
             
             burpMCP.writeToServerLog("To client", exchange.getClientInfo().name() + " " + exchange.getClientInfo().version(), 
-                    "Tool", "get-resource", "Returning data for ID: " + requestId);
+                    "Tool", "get-saved-request", result.toString());
             
             return result;
             

@@ -29,6 +29,16 @@ public class SentRequestTableModel extends AbstractTableModel {
     }
 
     @Override
+    public Class<?> getColumnClass(int columnIndex) {
+        if (columnIndex == 0) { // ID column
+            return Integer.class;
+        } else if (columnIndex == 6 || columnIndex == 7) { // Status and Response Length columns
+            return Integer.class;
+        }
+        return String.class;
+    }
+
+    @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
         SentRequestListModel.SentRequestEntry entry = sentRequestListModel.getEntry(rowIndex);
         switch (columnIndex) {

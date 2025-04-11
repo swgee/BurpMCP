@@ -2,31 +2,31 @@ package burpmcp.ui;
 
 import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.http.message.HttpRequestResponse;
-import burpmcp.models.ResourceListModel;
-import burpmcp.models.ResourceTableModel;
+import burpmcp.models.SavedRequestListModel;
+import burpmcp.models.SavedRequestTableModel;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
 
-public class ResourceLogsPanel extends JPanel {
-    private final ResourceListModel resourceListModel;
+public class SavedRequestLogsPanel extends JPanel {
     private final JTable requestTable;
-    private final ResourceDetailPanel detailPanel;
+    private final SavedRequestListModel savedRequestListModel;
+    private final SavedRequestDetailPanel detailPanel;
 
-    public ResourceLogsPanel(MontoyaApi api, ResourceListModel resourceListModel) {
+    public SavedRequestLogsPanel(MontoyaApi api, SavedRequestListModel savedRequestListModel) {
         super(new BorderLayout());
-        this.resourceListModel = resourceListModel;
+        this.savedRequestListModel = savedRequestListModel;
         
         // Create the table with expanded columns including Status code and Response Length
         String[] columnNames = {"ID", "Time", "Host", "Method", "Path", "Query", "Status", "Resp Len", "Notes"};
-        ResourceTableModel tableModel = new ResourceTableModel(resourceListModel, columnNames);
+        SavedRequestTableModel tableModel = new SavedRequestTableModel(savedRequestListModel, columnNames);
         requestTable = new JTable(tableModel);
         requestTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         requestTable.setAutoCreateRowSorter(true);
         
         // Connect the table model to the list model
-        resourceListModel.setTableModel(tableModel);
+        savedRequestListModel.setTableModel(tableModel);
         
         // Set column widths
         requestTable.getColumnModel().getColumn(0).setPreferredWidth(50);
@@ -50,7 +50,7 @@ public class ResourceLogsPanel extends JPanel {
         JScrollPane tableScrollPane = new JScrollPane(requestTable);
         
         // Create the detail panel
-        detailPanel = new ResourceDetailPanel(api);
+        detailPanel = new SavedRequestDetailPanel(api);
         
         // Add selection listener to show request details
         requestTable.getSelectionModel().addListSelectionListener(e -> {
@@ -59,8 +59,8 @@ public class ResourceLogsPanel extends JPanel {
                 if (selectedRow >= 0) {
                     // Convert view index to model index
                     int modelRow = requestTable.convertRowIndexToModel(selectedRow);
-                    HttpRequestResponse selectedRequest = resourceListModel.getRequestAt(modelRow);
-                    detailPanel.setRequest(selectedRequest, modelRow, resourceListModel);
+                    HttpRequestResponse selectedRequest = savedRequestListModel.getRequestAt(modelRow);
+                    detailPanel.setRequest(selectedRequest, modelRow, savedRequestListModel);
                 }
             }
         });
@@ -69,6 +69,17 @@ public class ResourceLogsPanel extends JPanel {
         JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, tableScrollPane, detailPanel);
         splitPane.setResizeWeight(0.4); // Give 40% to the table
         
+        // Create a panel for the clear button
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        JButton clearButton = new JButton("Clear Saved Requests");
+        clearButton.addActionListener(e -> {
+            savedRequestListModel.clear();
+            requestTable.updateUI();
+        });
+        buttonPanel.add(clearButton);
+        
+        // Add the button panel and split pane
+        add(buttonPanel, BorderLayout.NORTH);
         add(splitPane, BorderLayout.CENTER);
     }
 

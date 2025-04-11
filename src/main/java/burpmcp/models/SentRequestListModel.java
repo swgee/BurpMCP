@@ -19,8 +19,8 @@ public class SentRequestListModel {
         this.tableModel = tableModel;
     }
 
-    public void addRequest(HttpRequestResponse requestResponse) {
-        SentRequestEntry entry = new SentRequestEntry(nextId++, ZonedDateTime.now(), requestResponse);
+    public void addRequest(HttpRequestResponse requestResponse, ZonedDateTime time) {
+        SentRequestEntry entry = new SentRequestEntry(nextId++, time, requestResponse);
         requests.add(entry);
         if (tableModel != null) {
             tableModel.fireTableRowsInserted(requests.size() - 1, requests.size() - 1);
@@ -37,6 +37,14 @@ public class SentRequestListModel {
 
     public HttpRequestResponse getRequestAt(int rowIndex) {
         return requests.get(rowIndex).getRequestResponse();
+    }
+
+    public void clear() {
+        requests.clear();
+        nextId = 1;
+        if (tableModel != null) {
+            tableModel.fireTableDataChanged();
+        }
     }
 
     public static class SentRequestEntry {

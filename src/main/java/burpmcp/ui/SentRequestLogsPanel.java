@@ -72,6 +72,17 @@ public class SentRequestLogsPanel extends JPanel {
         JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, tableScrollPane, detailPanel);
         splitPane.setResizeWeight(0.4); // Give 40% to the table
         
+        // Create a panel for the clear button
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        JButton clearButton = new JButton("Clear Sent Requests");
+        clearButton.addActionListener(e -> {
+            sentRequestListModel.clear();
+            sentRequestTable.updateUI();
+        });
+        buttonPanel.add(clearButton);
+        
+        // Add the button panel and split pane
+        add(buttonPanel, BorderLayout.NORTH);
         add(splitPane, BorderLayout.CENTER);
     }
 

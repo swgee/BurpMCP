@@ -3,19 +3,19 @@ package burpmcp.models;
 import javax.swing.table.AbstractTableModel;
 import java.time.format.DateTimeFormatter;
 
-public class ResourceTableModel extends AbstractTableModel {
-    private final ResourceListModel resourceListModel;
+public class SavedRequestTableModel extends AbstractTableModel {
+    private final SavedRequestListModel savedRequestListModel;
     private final String[] columnNames;
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    public ResourceTableModel(ResourceListModel resourceListModel, String[] columnNames) {
-        this.resourceListModel = resourceListModel;
+    public SavedRequestTableModel(SavedRequestListModel savedRequestListModel, String[] columnNames) {
+        this.savedRequestListModel = savedRequestListModel;
         this.columnNames = columnNames;
     }
 
     @Override
     public int getRowCount() {
-        return resourceListModel.getRowCount();
+        return savedRequestListModel.getRowCount();
     }
 
     @Override
@@ -29,8 +29,18 @@ public class ResourceTableModel extends AbstractTableModel {
     }
 
     @Override
+    public Class<?> getColumnClass(int columnIndex) {
+        if (columnIndex == 0) { // ID column
+            return Integer.class;
+        } else if (columnIndex == 6 || columnIndex == 7) { // Status and Response Length columns
+            return Integer.class;
+        }
+        return String.class;
+    }
+
+    @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
-        ResourceListModel.RequestEntry entry = resourceListModel.getEntry(rowIndex);
+        SavedRequestListModel.RequestEntry entry = savedRequestListModel.getEntry(rowIndex);
         switch (columnIndex) {
             case 0:
                 return entry.getId();
@@ -82,7 +92,7 @@ public class ResourceTableModel extends AbstractTableModel {
     @Override
     public void setValueAt(Object value, int rowIndex, int columnIndex) {
         if (columnIndex == 8) {
-            resourceListModel.setNotes(rowIndex, (String) value);
+            savedRequestListModel.setNotes(rowIndex, (String) value);
             fireTableCellUpdated(rowIndex, columnIndex);
         }
     }
