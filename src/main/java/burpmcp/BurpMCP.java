@@ -36,16 +36,21 @@ public class BurpMCP implements BurpExtension {
     private MCPServer mcpServer;
     private JTextField hostField;
     private JTextField portField;
+    private BurpMCPPersistence persistence;
 
     @Override
     public void initialize(MontoyaApi api) {
         this.api = api;
         api.extension().setName("BurpMCP");
+        persistence = new BurpMCPPersistence(api);
         
         // Initialize our models
         requestListModel = new RequestListModel();
         serverLogListModel = new ServerLogListModel();
         sentRequestListModel = new SentRequestListModel();
+        
+        // Restore state from persistence
+        persistence.restoreState(requestListModel, sentRequestListModel, serverLogListModel);
         
         // Initialize MCP server
         mcpServer = new MCPServer(api, this);
@@ -55,6 +60,8 @@ public class BurpMCP implements BurpExtension {
             if (mcpServer.isRunning()) {
                 mcpServer.stop();
             }
+            // Save the current state before unloading
+            persistence.saveState(requestListModel, sentRequestListModel, serverLogListModel);
         });
         
         // Register context menu item
@@ -128,10 +135,22 @@ public class BurpMCP implements BurpExtension {
         // Create server configuration panel
         JPanel configPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         configPanel.add(new JLabel("Host:"));
-        hostField = new JTextField("localhost", 15);
+        
+        // Initialize with default values that will be replaced if persisted values are found
+        String defaultHost = "localhost";
+        String defaultPort = "8181";
+        
+        // Try to restore saved configuration
+        Object[] savedConfig = persistence.restoreServerConfig();
+        if (savedConfig != null) {
+            defaultHost = (String) savedConfig[0];
+            defaultPort = String.valueOf(savedConfig[1]);
+        }
+        
+        hostField = new JTextField(defaultHost, 15);
         configPanel.add(hostField);
         configPanel.add(new JLabel("Port:"));
-        portField = new JTextField("8181", 5);
+        portField = new JTextField(defaultPort, 5);
         configPanel.add(portField);
         
         // Create toggle button
@@ -143,6 +162,9 @@ public class BurpMCP implements BurpExtension {
                     String host = hostField.getText().trim();
                     int port = Integer.parseInt(portField.getText().trim());
                     mcpServer.setServerConfig(host, port);
+                    
+                    // Save server configuration
+                    persistence.saveServerConfig(host, port);
                     
                     // Start server
                     mcpServer.start();
