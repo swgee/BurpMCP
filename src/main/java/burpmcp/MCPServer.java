@@ -21,7 +21,8 @@ import reactor.netty.http.server.HttpServer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import burpmcp.tools.HttpSendTool;
+import burpmcp.tools.Http1SendTool;
+import burpmcp.tools.Http2SendTool;
 import burpmcp.tools.GetSavedRequestTool;
 import burpmcp.tools.UpdateNoteTool;
 import burpmcp.tools.SaveRequestTool;
@@ -74,9 +75,13 @@ public class MCPServer {
                 ssePath
             );
             
-            // Create HTTP Send tool
-            HttpSendTool httpSendTool = new HttpSendTool(api, burpMCP);
-            SyncToolSpecification httpSendToolSpec = httpSendTool.createToolSpecification();
+            // Create HTTP/1.1 Send tool
+            Http1SendTool http1SendTool = new Http1SendTool(api, burpMCP);
+            SyncToolSpecification http1SendToolSpec = http1SendTool.createToolSpecification();
+
+            // Create HTTP/2 Send tool
+            Http2SendTool http2SendTool = new Http2SendTool(api, burpMCP);
+            SyncToolSpecification http2SendToolSpec = http2SendTool.createToolSpecification();
 
             // Create Retrieve Saved Request tool
             GetSavedRequestTool retrieveSavedRequestTool = new GetSavedRequestTool(burpMCP, savedRequestListModel);
@@ -103,7 +108,8 @@ public class MCPServer {
                     .tools(true)               // Enable tool support
                     .logging()                 // Enable logging support
                     .build())
-                .tool(httpSendToolSpec.tool(), httpSendToolSpec.call()) // Add HTTP send tool
+                .tool(http1SendToolSpec.tool(), http1SendToolSpec.call()) // Add HTTP/1.1 send tool
+                .tool(http2SendToolSpec.tool(), http2SendToolSpec.call()) // Add HTTP/2 send tool
                 .tool(retrieveSavedRequestToolSpec.tool(), retrieveSavedRequestToolSpec.call()) // Add retrieve saved request tool
                 .tool(updateNoteToolSpec.tool(), updateNoteToolSpec.call()) // Add update note tool
                 .tool(saveRequestToolSpec.tool(), saveRequestToolSpec.call()) // Add save request tool

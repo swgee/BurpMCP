@@ -21,11 +21,11 @@ import burpmcp.utils.HttpUtils;
 /**
  * A tool for sending HTTP requests via BurpMCP
  */
-public class HttpSendTool {
+public class Http2SendTool {
 
     private final MontoyaApi api;
     private final BurpMCP burpMCP;
-    public HttpSendTool(MontoyaApi api, BurpMCP burpMCP) {
+    public Http2SendTool(MontoyaApi api, BurpMCP burpMCP) {
         this.api = api;
         this.burpMCP = burpMCP;
     }
@@ -45,9 +45,13 @@ public class HttpSendTool {
                     "type": "string",
                     "description": "HTTP body part of the request"
                 },
+                "authority": {
+                    "type": "string",
+                    "description": "Authority part of the request - the Host header value of HTTP/2 requests"
+                },
                 "headers": {
                     "type": "string",
-                    "description": "Newline separated HTTP headers. Unless specified otherwise, the host header should be included here. If using HTTP/2, don't use invalid headers according to the HTTP/2 specification."
+                    "description": "Newline separated additional HTTP headers. Don't use invalid headers according to the HTTP/2 specification (Connection, Keep-Alive, Proxy-Connection, Transfer-Encoding, Upgrade)."
                 },
                 "method": {
                     "type": "string",
@@ -68,24 +72,19 @@ public class HttpSendTool {
                 "secure": {
                     "type": "boolean",
                     "description": "Whether to use HTTPS (true) or HTTP (false)"
-                },
-                "httpVersion": {
-                    "type": "string",
-                    "enum": ["HTTP/1.1", "HTTP/2"],
-                    "description": "HTTP protocol version to use for the request"
                 }
             },
-            "required": ["body", "headers", "method", "path", "host", "port", "secure", "httpVersion"]
+            "required": ["body", "headers", "method", "path", "host", "port", "secure"]
         }
         """;
 
-        Tool httpSendTool = new Tool(
-                "http-send",
-                "Sends an HTTP request using Burp's HTTP client",
+        Tool http2SendTool = new Tool(
+                "http2-send",
+                "Sends an HTTP/2 request using Burp's HTTP client",
                 schema);
 
         // Create the tool specification with the handler function
-        return new SyncToolSpecification(httpSendTool, this::handleToolCall);
+        return new SyncToolSpecification(http2SendTool, this::handleToolCall);
     }
 
     /**
@@ -96,13 +95,22 @@ public class HttpSendTool {
      * @return The tool execution result
      */
     private CallToolResult handleToolCall(McpSyncServerExchange exchange, Map<String, Object> args) {
+        // Validate required parameters
+        String[] requiredParams = {"body", "authority", "headers", "method", "path", "host", "port", "secure"};
+        for (String param : requiredParams) {
+            if (!args.containsKey(param)) {
+                return new CallToolResult(Collections.singletonList(
+                    new TextContent("ERROR: Missing required parameter: " + param)), true);
+            }
+        }
+
         CallToolResult result;
-        burpMCP.writeToServerLog("To server", exchange.getClientInfo().name()+" "+exchange.getClientInfo().version(), "Tool", "http-send", new Gson().toJson(args));
+        burpMCP.writeToServerLog("To server", exchange.getClientInfo().name()+" "+exchange.getClientInfo().version(), "Tool", "http2-send", new Gson().toJson(args));
         try {
-            HttpRequest httpRequest = HttpUtils.buildHttpRequest(args);
+            HttpRequest httpRequest = HttpUtils.buildHttp2Request(args);
             
             // Send the request using the specified HTTP mode
-            HttpRequestResponse response = api.http().sendRequest(httpRequest, HttpUtils.getHttpMode(args.get("httpVersion").toString()));
+            HttpRequestResponse response = api.http().sendRequest(httpRequest, HttpMode.HTTP_2);
 
             // Log the sent request to the Request Logs tab
             burpMCP.addSentRequest(response);
@@ -120,23 +128,9 @@ public class HttpSendTool {
             
         } catch (Exception e) {
             result = new CallToolResult(Collections.singletonList(
-                new TextContent("ERROR: Error sending HTTP request: " + e.getMessage())), true);
+                new TextContent("ERROR: Error sending HTTP/2 request: " + e.getMessage())), true);
         }
-        burpMCP.writeToServerLog("To client", exchange.getClientInfo().name()+" "+exchange.getClientInfo().version(), "Tool", "http-send", result.toString());
+        burpMCP.writeToServerLog("To client", exchange.getClientInfo().name()+" "+exchange.getClientInfo().version(), "Tool", "http2-send", result.toString());
         return result;
-    }
-    
-    /**
-     * Converts string HTTP version to HttpMode enum
-     * 
-     * @param httpVersion String representation of HTTP version
-     * @return The corresponding HttpMode
-     */
-    private HttpMode getHttpMode(String httpVersion) {
-        return switch (httpVersion.toUpperCase()) {
-            case "HTTP_2" -> HttpMode.HTTP_2;
-            case "HTTP_1" -> HttpMode.HTTP_1;
-            default -> HttpMode.AUTO;
-        };
     }
 }
