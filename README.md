@@ -2,7 +2,7 @@
 
 ![Burp and LLMs unite](assets/cover_image.png)
 
-BurpMCP is a Burp Suite extension to augment application security testers, vulnerability researchers, and bug bounty hunters with the capabilities of modern AI. Every day, large language models are gaining larger context windows, faster response times, and greater knowledge and reasoning skills. BurpMCP lets you take advantage of this inevitable technology while testing HTTP attack surfaces, providing a super-intelligent sidekick to help navigate unfamiliar attack surfaces and chase down complex vulnerabiltiies.
+BurpMCP is a Burp Suite extension to augment application security testers, vulnerability researchers, and bug bounty hunters with the capabilities of modern AI. Every day, large language models are gaining larger context windows, faster response times, and greater knowledge and reasoning skills. BurpMCP lets you take advantage of this inevitable technology while testing HTTP-based applications, providing a super-intelligent sidekick to help navigate unfamiliar attack surfaces and chase down complex vulnerabiltiies.
 
 While other MCP servers for Burp Suite exist, they only provide generic access to Burp Suite tools and data, such as running scans, viewing issues, and reading proxy history. BurpMCP focuses on enhancing manual testing with the help of LLMs, implementing a clean user interface to easily provide AI with requests as context, monitor requests sent by the AI, and manage the MCP server. Additionally, both HTTP 1.1 and 2 are supported and tested for reliability.
 
@@ -59,9 +59,9 @@ Claude attempting to solve the lab:
 
 ## Examples
 
-For some examples of using the extension successfully, check out the [examples](examples).
+For some examples of chat logs where BurpMCP is used successfully, check out the [examples](examples).
 
-Special thanks to the following for providing some examples:
+Special thanks to the following people for providing some:
 
 - [hunterverhelst](https://github.com/hunterverhelst)
 
