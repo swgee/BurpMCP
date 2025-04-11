@@ -23,8 +23,8 @@ public class SavedRequestListModel {
         return tableModel;
     }
 
-    public void addRequest(HttpRequestResponse requestResponse, ZonedDateTime time) {
-        RequestEntry entry = new RequestEntry(nextId++, time, requestResponse, "");
+    public void addRequest(HttpRequestResponse requestResponse, ZonedDateTime time, String notes) {
+        RequestEntry entry = new RequestEntry(nextId++, time, requestResponse, notes);
         requests.add(entry);
         if (tableModel != null) {
             tableModel.fireTableRowsInserted(requests.size() - 1, requests.size() - 1);

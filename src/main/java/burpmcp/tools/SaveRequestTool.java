@@ -6,9 +6,9 @@ import java.util.Map;
 import com.google.gson.Gson;
 
 import burp.api.montoya.MontoyaApi;
-import burp.api.montoya.http.HttpMode;
-import burp.api.montoya.http.message.HttpRequestResponse;
 import burp.api.montoya.http.message.requests.HttpRequest;
+import burp.api.montoya.http.message.responses.HttpResponse;
+import burp.api.montoya.http.message.HttpRequestResponse;
 import io.modelcontextprotocol.server.McpServerFeatures.SyncToolSpecification;
 import io.modelcontextprotocol.server.McpSyncServerExchange;
 import io.modelcontextprotocol.spec.McpSchema.CallToolResult;
@@ -21,11 +21,11 @@ import burpmcp.utils.HttpUtils;
 /**
  * A tool for sending HTTP requests via BurpMCP
  */
-public class HttpSendTool {
+public class SaveRequestTool {
 
     private final MontoyaApi api;
     private final BurpMCP burpMCP;
-    public HttpSendTool(MontoyaApi api, BurpMCP burpMCP) {
+    public SaveRequestTool(MontoyaApi api, BurpMCP burpMCP) {
         this.api = api;
         this.burpMCP = burpMCP;
     }
@@ -73,19 +73,27 @@ public class HttpSendTool {
                     "type": "string",
                     "enum": ["HTTP/1.1", "HTTP/2"],
                     "description": "HTTP protocol version to use for the request"
+                },
+                "notes": {
+                    "type": "string",
+                    "description": "Notes for the request"
+                },
+                "response": {
+                    "type": "string",
+                    "description": "Response content"
                 }
             },
             "required": ["body", "headers", "method", "path", "host", "port", "secure", "httpVersion"]
         }
         """;
 
-        Tool httpSendTool = new Tool(
-                "http-send",
-                "Sends an HTTP request using Burp's HTTP client",
+        Tool saveRequestTool = new Tool(
+                "save-request",
+                "Saves an HTTP request to the saved requests list",
                 schema);
 
         // Create the tool specification with the handler function
-        return new SyncToolSpecification(httpSendTool, this::handleToolCall);
+        return new SyncToolSpecification(saveRequestTool, this::handleToolCall);
     }
 
     /**
@@ -97,46 +105,24 @@ public class HttpSendTool {
      */
     private CallToolResult handleToolCall(McpSyncServerExchange exchange, Map<String, Object> args) {
         CallToolResult result;
-        burpMCP.writeToServerLog("To server", exchange.getClientInfo().name()+" "+exchange.getClientInfo().version(), "Tool", "http-send", new Gson().toJson(args));
+        burpMCP.writeToServerLog("To server", exchange.getClientInfo().name()+" "+exchange.getClientInfo().version(), "Tool", "save-request", new Gson().toJson(args));
         try {
             HttpRequest httpRequest = HttpUtils.buildHttpRequest(args);
-            
-            // Send the request using the specified HTTP mode
-            HttpRequestResponse response = api.http().sendRequest(httpRequest, HttpUtils.getHttpMode(args.get("httpVersion").toString()));
+            String responseStr = args.get("response") != null ? args.get("response").toString() : "";
+            HttpResponse httpResponse = HttpResponse.httpResponse(responseStr);
 
-            // Log the sent request to the Request Logs tab
-            burpMCP.addSentRequest(response);
+            HttpRequestResponse requestResponse = HttpRequestResponse.httpRequestResponse(httpRequest, httpResponse);
+
+            burpMCP.addSavedRequest(requestResponse, args.get("notes").toString());
             
-            // Process the response
-            if (!response.hasResponse()) {
-                result = new CallToolResult(Collections.singletonList(
-                    new TextContent("ERROR: No response received. The request may have timed out or failed.")), true);
-            }
-            
-            // Format and return the response
-            String responseContent = response.response().toString();
             result = new CallToolResult(Collections.singletonList(
-                new TextContent(responseContent)), false);
+                new TextContent("Request saved successfully")), false);
             
         } catch (Exception e) {
             result = new CallToolResult(Collections.singletonList(
-                new TextContent("ERROR: Error sending HTTP request: " + e.getMessage())), true);
+                new TextContent("ERROR: Error adding HTTP request: " + e.getMessage())), true);
         }
-        burpMCP.writeToServerLog("To client", exchange.getClientInfo().name()+" "+exchange.getClientInfo().version(), "Tool", "http-send", result.toString());
+        burpMCP.writeToServerLog("To client", exchange.getClientInfo().name()+" "+exchange.getClientInfo().version(), "Tool", "save-request", result.toString());
         return result;
-    }
-    
-    /**
-     * Converts string HTTP version to HttpMode enum
-     * 
-     * @param httpVersion String representation of HTTP version
-     * @return The corresponding HttpMode
-     */
-    private HttpMode getHttpMode(String httpVersion) {
-        return switch (httpVersion.toUpperCase()) {
-            case "HTTP_2" -> HttpMode.HTTP_2;
-            case "HTTP_1" -> HttpMode.HTTP_1;
-            default -> HttpMode.AUTO;
-        };
     }
 }

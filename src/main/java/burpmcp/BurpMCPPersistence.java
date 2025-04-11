@@ -102,7 +102,7 @@ public class BurpMCPPersistence {
         // Loop through and add each request to the model
         for (int i = 0; i < requestResponses.size(); i++) {
             // Add the request to the model
-            savedRequestsModel.addRequest(requestResponses.get(i), ZonedDateTime.parse(times.get(i), DATE_TIME_FORMATTER));
+            savedRequestsModel.addRequest(requestResponses.get(i), ZonedDateTime.parse(times.get(i), DATE_TIME_FORMATTER), notes.get(i));
             
             // Set the notes for the entry (last entry added)
             int lastIndex = savedRequestsModel.getRowCount() - 1;

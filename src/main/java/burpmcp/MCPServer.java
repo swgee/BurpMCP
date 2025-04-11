@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import burpmcp.tools.HttpSendTool;
 import burpmcp.tools.GetSavedRequestTool;
 import burpmcp.tools.UpdateNoteTool;
+import burpmcp.tools.SaveRequestTool;
 import burpmcp.models.SavedRequestListModel;
 
 public class MCPServer {
@@ -85,6 +86,10 @@ public class MCPServer {
             UpdateNoteTool updateNoteTool = new UpdateNoteTool(burpMCP, savedRequestListModel);
             SyncToolSpecification updateNoteToolSpec = updateNoteTool.createToolSpecification();
             
+            // Create Save Request tool
+            SaveRequestTool saveRequestTool = new SaveRequestTool(api, burpMCP);
+            SyncToolSpecification saveRequestToolSpec = saveRequestTool.createToolSpecification();
+
             // Create request saved request specification
             // Ensure savedRequestListModel is set before starting the server
             if (savedRequestListModel == null) {
@@ -101,6 +106,7 @@ public class MCPServer {
                 .tool(httpSendToolSpec.tool(), httpSendToolSpec.call()) // Add HTTP send tool
                 .tool(retrieveSavedRequestToolSpec.tool(), retrieveSavedRequestToolSpec.call()) // Add retrieve saved request tool
                 .tool(updateNoteToolSpec.tool(), updateNoteToolSpec.call()) // Add update note tool
+                .tool(saveRequestToolSpec.tool(), saveRequestToolSpec.call()) // Add save request tool
                 .build();
             
             // Get the router function from the transport provider

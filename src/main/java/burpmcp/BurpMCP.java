@@ -81,7 +81,7 @@ public class BurpMCP implements BurpExtension {
                     JMenuItem sendToExtensionItem = new JMenuItem("Send to BurpMCP");
                     sendToExtensionItem.addActionListener(e -> {
                         for (HttpRequestResponse requestResponse : event.selectedRequestResponses()) {
-                            savedRequestListModel.addRequest(requestResponse, ZonedDateTime.now());
+                            savedRequestListModel.addRequest(requestResponse, ZonedDateTime.now(), "");
                             savedRequestLogsPanel.getRequestTable().updateUI();
                         }
                     });
@@ -95,7 +95,7 @@ public class BurpMCP implements BurpExtension {
                     sendToExtensionItem.addActionListener(e -> {
                         event.messageEditorRequestResponse().ifPresent(editor -> {
                             HttpRequestResponse requestResponse = editor.requestResponse();
-                            savedRequestListModel.addRequest(requestResponse, ZonedDateTime.now());
+                            savedRequestListModel.addRequest(requestResponse, ZonedDateTime.now(), "");
                             savedRequestLogsPanel.getRequestTable().updateUI();
                         });
                     });
@@ -231,5 +231,10 @@ public class BurpMCP implements BurpExtension {
     public void addSentRequest(HttpRequestResponse requestResponse) {
         sentRequestListModel.addRequest(requestResponse, ZonedDateTime.now());
         requestLogsPanel.getSentRequestTable().updateUI();
+    }
+
+    public void addSavedRequest(HttpRequestResponse requestResponse, String notes) {
+        savedRequestListModel.addRequest(requestResponse, ZonedDateTime.now(), notes);
+        savedRequestLogsPanel.getRequestTable().updateUI();
     }
 }
