@@ -7,17 +7,10 @@ This allows clients like Claude Desktop that only support STDIO to connect to re
 
 import asyncio
 import logging
-import os
 import sys
 import typer
-from pathlib import Path
-from typing import Any, Optional, Tuple, Dict
+from typing import Any, Optional
 from urllib.parse import urlparse
-
-import anyio
-from anyio.streams.memory import MemoryObjectReceiveStream, MemoryObjectSendStream
-import httpx
-
 from mcp import (
     ClientSession, 
     ServerSession, 
