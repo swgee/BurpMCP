@@ -91,7 +91,7 @@ public class Http1SendTool {
         CallToolResult result;
         burpMCP.writeToServerLog("To server", exchange.getClientInfo().name()+" "+exchange.getClientInfo().version(), "Tool", "http1-send", new Gson().toJson(args));
         try {
-            HttpRequest httpRequest = HttpUtils.buildHttp1Request(args);
+            HttpRequest httpRequest = HttpUtils.buildHttp1Request(args, burpMCP.crlfReplace);
             
             // Send the request using the specified HTTP mode
             HttpRequestResponse response = api.http().sendRequest(httpRequest, HttpMode.HTTP_1);

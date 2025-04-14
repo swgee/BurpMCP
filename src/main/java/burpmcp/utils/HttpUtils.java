@@ -46,7 +46,7 @@ public class HttpUtils {
         return HttpRequest.http2Request(httpService, headersList, ByteArray.byteArray(body));
     }
 
-    public static HttpRequest buildHttp1Request(Map<String, Object> args) {
+    public static HttpRequest buildHttp1Request(Map<String, Object> args, boolean crlfReplace) {
         String data = args.get("data").toString();
         String host = args.get("host").toString();
         Integer port = ((Number) args.get("port")).intValue();
@@ -55,15 +55,37 @@ public class HttpUtils {
         // Create HTTP service for the target
         HttpService httpService = HttpService.httpService(host, port, secure);
 
-        int doubleNewlineCount = data.split("\n\n", -1).length - 1;
-        // if no body, add two newlines to the end of the request
-        if (doubleNewlineCount == 0) {
-            data = data + "\n\n";
+        if (crlfReplace) {
+            // replace newlines with CRLF
+            data = data.replaceAll("(?<!\\r)\\n", "\r\n");
+
+            // Determine if the request has a body (double CRLF) and retrieve it
+            String body = "";
+            boolean hasBody = data.contains("\r\n\r\n");
+            if (hasBody) {
+                // Everything after the first double CRLF
+                body = data.split("\r\n\r\n", 2)[1];
+            } else {
+                // Ensure at least two CRLFs at the end of the request
+                if (data.endsWith("\r\n")) {
+                    data += "\r\n";
+                } else {
+                    data += "\r\n\r\n";
+                }
+            }
+            // withBody updates the Content-Length header to the correct length after the CRLF replacement
+            return HttpRequest.httpRequest(httpService, ByteArray.byteArray(data)).withBody(ByteArray.byteArray(body));
+        } else {
+            // Ensure at least two newlines at the end of the request
+            boolean hasBody = data.contains("\r\n\r\n") || data.contains("\n\n");
+            if (!hasBody) {
+                if (data.endsWith("\n")) {
+                    data += "\r\n";
+                } else {
+                    data += "\r\n\r\n";
+                }
+            }
+            return HttpRequest.httpRequest(httpService, ByteArray.byteArray(data));
         }
-
-        // replace newlines with CRLF
-        String crlfData = data.replaceAll("(?<!\\r)\\n", "\r\n");
-
-        return HttpRequest.httpRequest(httpService, ByteArray.byteArray(crlfData));
     }
 } 

@@ -42,6 +42,7 @@ public class MCPServer {
     private final String ssePath = "/mcp/sse";
     private reactor.netty.DisposableServer reactorServer;
     private SavedRequestListModel savedRequestListModel;
+    private Http1SendTool http1SendTool;
     
     public MCPServer(MontoyaApi api, BurpMCP burpMCP) {
         this.api = api;
@@ -77,7 +78,7 @@ public class MCPServer {
             );
             
             // Create HTTP/1.1 Send tool
-            Http1SendTool http1SendTool = new Http1SendTool(api, burpMCP);
+            http1SendTool = new Http1SendTool(api, burpMCP);
             SyncToolSpecification http1SendToolSpec = http1SendTool.createToolSpecification();
 
             // Create HTTP/2 Send tool
@@ -227,5 +228,9 @@ public class MCPServer {
     
     public String getMessageEndpoint() {
         return messagePath;
+    }
+
+    public Http1SendTool getHttp1SendTool() {
+        return http1SendTool;
     }
 }

@@ -28,10 +28,15 @@ public class BurpMCP implements BurpExtension {
     private SavedRequestLogsPanel savedRequestLogsPanel;
     private ServerLogsPanel serverLogsPanel;
     private SentRequestLogsPanel requestLogsPanel;
-    private JToggleButton toggleButton;
+    private JToggleButton mcpServerToggleButton;
+    private JToggleButton crlfToggleButton;
+    private boolean mcpServerEnabled;
+    public boolean crlfReplace;
     private MCPServer mcpServer;
     private JTextField hostField;
     private JTextField portField;
+    private String serverHost;
+    private Integer serverPort;
     private BurpMCPPersistence persistence;
 
     @Override
@@ -133,38 +138,42 @@ public class BurpMCP implements BurpExtension {
         configPanel.add(new JLabel("Host:"));
         
         // Initialize with default values that will be replaced if persisted values are found
-        String defaultHost = "localhost";
-        String defaultPort = "8181";
-        
+        serverHost = "localhost";
+        serverPort = 8181;
+        crlfReplace = true;
+        mcpServerEnabled = false;
         // Try to restore saved configuration
         Object[] savedConfig = persistence.restoreServerConfig();
         if (savedConfig != null) {
-            defaultHost = (String) savedConfig[0];
-            defaultPort = String.valueOf(savedConfig[1]);
+            serverHost = (String) savedConfig[0];
+            serverPort = (Integer) savedConfig[1];
+            crlfReplace = (Boolean) savedConfig[2];
+            mcpServerEnabled = (Boolean) savedConfig[3];
         }
         
-        hostField = new JTextField(defaultHost, 15);
+        hostField = new JTextField(serverHost, 15);
         configPanel.add(hostField);
         configPanel.add(new JLabel("Port:"));
-        portField = new JTextField(defaultPort, 5);
+        portField = new JTextField(String.valueOf(serverPort), 5);
         configPanel.add(portField);
         
         // Create toggle button
-        toggleButton = new JToggleButton("MCP Server: Disabled");
-        toggleButton.addActionListener(e -> {
-            if (toggleButton.isSelected()) {
+        mcpServerToggleButton = new JToggleButton("MCP Server: Disabled");
+        mcpServerToggleButton.addActionListener(e -> {
+            if (mcpServerToggleButton.isSelected()) {
                 try {
                     // Update server configuration
-                    String host = hostField.getText().trim();
-                    int port = Integer.parseInt(portField.getText().trim());
-                    mcpServer.setServerConfig(host, port);
+                    serverHost = hostField.getText().trim();
+                    serverPort = Integer.parseInt(portField.getText().trim());
+                    mcpServerEnabled = true;
+                    mcpServer.setServerConfig(serverHost, serverPort);
                     
                     // Save server configuration
-                    persistence.saveServerConfig(host, port);
+                    persistence.saveServerConfig(serverHost, serverPort, crlfReplace, mcpServerEnabled);
                     
                     // Start server
                     mcpServer.start();
-                    toggleButton.setText("MCP Server: Enabled");
+                    mcpServerToggleButton.setText("MCP Server: Enabled");
                     serverLogsPanel.getServerLogTable().updateUI();
                     
                     // Disable configuration fields
@@ -175,13 +184,13 @@ public class BurpMCP implements BurpExtension {
                         "Invalid port number. Please enter a valid integer.", 
                         "Configuration Error", 
                         JOptionPane.ERROR_MESSAGE);
-                    toggleButton.setSelected(false);
+                    mcpServerToggleButton.setSelected(false);
                 } catch (IllegalStateException ex) {
                     JOptionPane.showMessageDialog(extensionPanel, 
                         ex.getMessage(), 
                         "Server Error", 
                         JOptionPane.ERROR_MESSAGE);
-                    toggleButton.setSelected(false);
+                    mcpServerToggleButton.setSelected(false);
                 } catch (Exception ex) {
                     String errorMessage = ex.getMessage();
                     if (errorMessage == null || errorMessage.isEmpty()) {
@@ -191,12 +200,12 @@ public class BurpMCP implements BurpExtension {
                         errorMessage, 
                         "Server Error", 
                         JOptionPane.ERROR_MESSAGE);
-                    toggleButton.setSelected(false);
+                    mcpServerToggleButton.setSelected(false);
                 }
             } else {
                 try {
                     mcpServer.stop();
-                    toggleButton.setText("MCP Server: Disabled");
+                    mcpServerToggleButton.setText("MCP Server: Disabled");
                     serverLogsPanel.getServerLogTable().updateUI();
                     
                     // Enable configuration fields
@@ -207,17 +216,34 @@ public class BurpMCP implements BurpExtension {
                         "Error stopping server: " + ex.getMessage(), 
                         "Server Error", 
                         JOptionPane.ERROR_MESSAGE);
-                    toggleButton.setSelected(true); // Keep server running if stop failed
+                    mcpServerToggleButton.setSelected(true); // Keep server running if stop failed
                 }
             }
         });
         
+        // Create CRLF toggle button with tooltip
+        crlfToggleButton = new JToggleButton("Replace LF with CRLF");
+        crlfToggleButton.setToolTipText("Replace all LF \"\\n\" with CRLF \"\\r\\n\" in HTTP/1.1 requests.\nSome LLMs are not capable of sending CRLFs in their MCP\nmessages, which are required for HTTP/1.1.");
+        crlfToggleButton.setSelected(crlfReplace);  
+        
+        // Add action listener to save state when toggled
+        crlfToggleButton.addActionListener(e -> {
+            crlfReplace = crlfToggleButton.isSelected();
+            persistence.saveServerConfig(serverHost, serverPort, crlfReplace, mcpServerEnabled);
+        });
+        
         // Add components to control panel
         controlPanel.add(configPanel);
-        controlPanel.add(toggleButton);
-        
+        controlPanel.add(mcpServerToggleButton);
+        controlPanel.add(crlfToggleButton);
+
         panel.add(controlPanel, BorderLayout.NORTH);
         panel.add(tabbedPane, BorderLayout.CENTER);
+
+        // If the server was previously enabled, restart it
+        if (mcpServerEnabled) {
+            mcpServerToggleButton.doClick();
+        }
         
         return panel;
     }

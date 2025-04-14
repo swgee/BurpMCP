@@ -239,7 +239,7 @@ public class BurpMCPPersistence {
     /**
      * Saves server configuration (host and port)
      */
-    public void saveServerConfig(String host, int port) {
+    public void saveServerConfig(String host, int port, boolean crlfReplace, boolean mcpServerEnabled) {
         // Get or create the config persisted object
         PersistedObject configObj = persistedData.getChildObject("config");
         if (configObj == null) {
@@ -250,12 +250,14 @@ public class BurpMCPPersistence {
         // Save host and port
         configObj.setString("host", host);
         configObj.setInteger("port", port);
+        configObj.setBoolean("crlfReplace", crlfReplace);
+        configObj.setBoolean("mcpServerEnabled", mcpServerEnabled);
     }
     
     /**
      * Restores server configuration (host and port)
      * 
-     * @return Object array containing [host, port] or null if not saved
+     * @return Object array containing [host, port, crlfReplace] or null if not saved
      */
     public Object[] restoreServerConfig() {
         PersistedObject configObj = persistedData.getChildObject("config");
@@ -265,11 +267,9 @@ public class BurpMCPPersistence {
         
         String host = configObj.getString("host");
         Integer port = configObj.getInteger("port");
-        
-        if (host != null && port != null) {
-            return new Object[] { host, port };
-        }
-        
-        return null;
+        Boolean crlfReplace = configObj.getBoolean("crlfReplace");
+        Boolean mcpServerEnabled = configObj.getBoolean("mcpServerEnabled");
+
+        return new Object[] { host, port, crlfReplace != null ? crlfReplace : false, mcpServerEnabled != null ? mcpServerEnabled : false };
     }
 }

@@ -43,7 +43,7 @@ public class SaveHttp1RequestTool {
             "properties": {
                 "data": {
                     "type": "string",
-                    "description": "Request content"
+                    "description": "Entire request content"
                 },
                 "host": {
                     "type": "string",
@@ -99,7 +99,7 @@ public class SaveHttp1RequestTool {
         CallToolResult result;
         burpMCP.writeToServerLog("To server", exchange.getClientInfo().name()+" "+exchange.getClientInfo().version(), "Tool", "save-http1-request", new Gson().toJson(args));
         try {
-            HttpRequest httpRequest = HttpUtils.buildHttp1Request(args);
+            HttpRequest httpRequest = HttpUtils.buildHttp1Request(args, burpMCP.crlfReplace);
             String responseStr = args.get("response") != null ? args.get("response").toString() : "";
             HttpResponse httpResponse = HttpResponse.httpResponse(responseStr);
 

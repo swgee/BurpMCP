@@ -65,15 +65,17 @@ Claude attempting to solve the lab:
 
 ## Examples
 
-For some examples of chat logs where BurpMCP is used successfully, check out the [examples](examples).
+For some examples of chat logs where BurpMCP is used successfully, check out the [Showcase](Showcase).
 
-Special thanks to the following people for providing some:
+Special thanks to the following people for providing examples:
 
 - [hunterverhelst](https://github.com/hunterverhelst)
 
-## Common Issues
+## Known Issues
 
-- The LLMs sometimes forget to add important components to requests like Content-Length headers or URL encoding. You may need to let the LLM know if it is forgetting something and cannot resolve the issue on its own.
+- The LLMs sometimes forget to add important components to requests like Content-Length headers or URL encoding. This is not an issue with the extension but rather a failure on the LLM's part. You may need to let the LLM know if it is forgetting something and cannot resolve the issue on its own.
+- Although the tool parameter specifies not to include forbidden headers in HTTP/2 requests, the LLMs may sometimes ignore it. If an HTTP/2 request fails, check the request for any invalid headers.
+- Sometimes, the LLM is not able to send CRLFs ("\r\n") over MCP. CRLF is required for compliant HTTP/1.1 requests. To fix this, automatic LF to CRLF replacement can be enabled. However, this changes the Content-Length of the request, requiring the Content-Length header to be automatically updated. Thus, when LF to CRLF replacement is enabled, testing vulnerabilities like HTTP Request Smuggling - which require tampering with the Content-Length header - will be difficult to perform with LLMs using HTTP/1.1.
 
 ## Tool Definitions
 
