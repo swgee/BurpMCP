@@ -1,6 +1,10 @@
 # BurpMCP
 
-![Burp and LLMs unite](assets/cover_image.png)
+<p align="center">
+    <picture>
+      <img src="assets/cover_image.png" width="500">
+    </picture>
+</p>
 
 BurpMCP is a Burp Suite extension to augment application security testers, vulnerability researchers, and bug bounty hunters with the capabilities of modern AI. Every day, large language models are gaining larger context windows, faster response times, and greater knowledge and reasoning skills. BurpMCP lets you take advantage of this inevitable technology while testing HTTP-based applications, providing a super-intelligent sidekick to help navigate unfamiliar attack surfaces and chase down complex vulnerabiltiies.
 
