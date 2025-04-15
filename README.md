@@ -19,7 +19,7 @@ The MCP server runs by default on localhost port 8181 over SSE. The configuratio
 ```json
 {
   "mcpServers": {
-    "burp-mcp-server": {
+    "BurpMCP": {
       "transport": "sse",
       "url": "http://localhost:8181/mcp/sse"
     }
@@ -38,7 +38,7 @@ Then, add the following configuration to your `claude_desktop_config.json`. Make
 ```json
 {
   "mcpServers": {
-    "burp-mcp": {
+    "BurpMCP": {
       "command": "python3",
       "args": ["path/to/stdio-bridge.py", "http://localhost:8181/mcp/sse"],
       "env": {}
