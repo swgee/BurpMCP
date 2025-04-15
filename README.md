@@ -20,10 +20,8 @@ The MCP server runs by default on localhost port 8181 over SSE. The configuratio
 {
   "mcpServers": {
     "burp-mcp-server": {
-      "enabled": true,
       "transport": "sse",
-      "url": "http://localhost:8181/mcp/sse",
-      "disabled": true
+      "url": "http://localhost:8181/mcp/sse"
     }
   }
 }
