@@ -28,7 +28,8 @@ import burpmcp.tools.UpdateNoteTool;
 import burpmcp.tools.SaveHttp1RequestTool;
 import burpmcp.tools.SaveHttp2RequestTool;
 import burpmcp.models.SavedRequestListModel;
-
+import burpmcp.tools.GenerateCollaboratorPayloadTool;
+import burpmcp.tools.RetrieveCollaboratorInteractionsTool;
 public class MCPServer {
     private final MontoyaApi api;
     private final BurpMCP burpMCP;
@@ -101,6 +102,14 @@ public class MCPServer {
             SaveHttp2RequestTool saveHttp2RequestTool = new SaveHttp2RequestTool(api, burpMCP);
             SyncToolSpecification saveHttp2RequestToolSpec = saveHttp2RequestTool.createToolSpecification();
 
+            // Create Generate Collaborator Payload tool
+            GenerateCollaboratorPayloadTool generateCollaboratorPayloadTool = new GenerateCollaboratorPayloadTool(burpMCP);
+            SyncToolSpecification generateCollaboratorPayloadToolSpec = generateCollaboratorPayloadTool.createToolSpecification();
+
+            // Create List Collaborator Interactions tool
+            RetrieveCollaboratorInteractionsTool retrieveCollaboratorInteractionsTool = new RetrieveCollaboratorInteractionsTool(burpMCP);
+            SyncToolSpecification retrieveCollaboratorInteractionsToolSpec = retrieveCollaboratorInteractionsTool.createToolSpecification();
+
             // Create request saved request specification
             // Ensure savedRequestListModel is set before starting the server
             if (savedRequestListModel == null) {
@@ -120,6 +129,8 @@ public class MCPServer {
                 .tool(updateNoteToolSpec.tool(), updateNoteToolSpec.call()) // Add update note tool
                 .tool(saveHttp1RequestToolSpec.tool(), saveHttp1RequestToolSpec.call()) // Add save HTTP/1.1 request tool
                 .tool(saveHttp2RequestToolSpec.tool(), saveHttp2RequestToolSpec.call()) // Add save HTTP/2 request tool
+                .tool(generateCollaboratorPayloadToolSpec.tool(), generateCollaboratorPayloadToolSpec.call()) // Add generate collaborator payload tool
+                .tool(retrieveCollaboratorInteractionsToolSpec.tool(), retrieveCollaboratorInteractionsToolSpec.call()) // Add list collaborator interactions tool
                 .build();
             
             // Get the router function from the transport provider

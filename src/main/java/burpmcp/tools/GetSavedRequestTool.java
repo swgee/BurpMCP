@@ -67,6 +67,7 @@ public class GetSavedRequestTool {
         burpMCP.writeToServerLog("To server", exchange.getClientInfo().name() + " " + exchange.getClientInfo().version(), 
                 "Tool", "get-saved-request", args.toString());
         
+        CallToolResult result;
         try {
             // Extract the request ID from arguments
             int requestId;
@@ -117,16 +118,16 @@ public class GetSavedRequestTool {
             combinedContent.append(notes);
             
             // Create the result
-            CallToolResult result = new CallToolResult(Collections.singletonList(new TextContent(combinedContent.toString())), false);
-            
-            burpMCP.writeToServerLog("To client", exchange.getClientInfo().name() + " " + exchange.getClientInfo().version(), 
-                    "Tool", "get-saved-request", result.toString());
-            
-            return result;
+            result = new CallToolResult(Collections.singletonList(new TextContent(combinedContent.toString())), false);
             
         } catch (Exception e) {
-            return new CallToolResult(Collections.singletonList(
+            result = new CallToolResult(Collections.singletonList(
                 new TextContent("ERROR: " + e.getMessage())), true);
         }
+
+        burpMCP.writeToServerLog("To client", exchange.getClientInfo().name() + " " + exchange.getClientInfo().version(), 
+                "Tool", "get-saved-request", result.toString());
+
+        return result;
     }
 }

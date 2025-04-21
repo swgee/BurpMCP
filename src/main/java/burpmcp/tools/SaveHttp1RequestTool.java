@@ -87,6 +87,8 @@ public class SaveHttp1RequestTool {
      * @return The tool execution result
      */
     private CallToolResult handleToolCall(McpSyncServerExchange exchange, Map<String, Object> args) {
+        burpMCP.writeToServerLog("To server", exchange.getClientInfo().name()+" "+exchange.getClientInfo().version(), "Tool", "save-http1-request", new Gson().toJson(args));
+
         // Validate required parameters
         String[] requiredParams = {"data", "host", "port", "secure"};
         for (String param : requiredParams) {
@@ -97,7 +99,6 @@ public class SaveHttp1RequestTool {
         }
 
         CallToolResult result;
-        burpMCP.writeToServerLog("To server", exchange.getClientInfo().name()+" "+exchange.getClientInfo().version(), "Tool", "save-http1-request", new Gson().toJson(args));
         try {
             HttpRequest httpRequest = HttpUtils.buildHttp1Request(args, burpMCP.crlfReplace);
             String responseStr = args.get("response") != null ? args.get("response").toString() : "";

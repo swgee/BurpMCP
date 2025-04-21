@@ -5,12 +5,14 @@ import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.http.message.HttpRequestResponse;
 import burp.api.montoya.ui.contextmenu.ContextMenuEvent;
 import burp.api.montoya.ui.contextmenu.ContextMenuItemsProvider;
-
+import burp.api.montoya.collaborator.CollaboratorClient;
+import burp.api.montoya.collaborator.Interaction;
 import javax.swing.*;
 import java.awt.*;
 import java.util.Collections;
 import java.util.List;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 
 import burpmcp.ui.SentRequestLogsPanel;
 import burpmcp.ui.SavedRequestLogsPanel;
@@ -38,6 +40,8 @@ public class BurpMCP implements BurpExtension {
     private String serverHost;
     private Integer serverPort;
     private BurpMCPPersistence persistence;
+    public CollaboratorClient collaboratorClient;
+    public List<String[]> retrievedInteractions;
 
     @Override
     public void initialize(MontoyaApi api) {
@@ -72,6 +76,9 @@ public class BurpMCP implements BurpExtension {
         // Create the extension UI tab
         extensionPanel = createExtensionPanel();
         api.userInterface().registerSuiteTab("BurpMCP", extensionPanel);
+
+        collaboratorClient = persistence.restoreCollaboratorClient();
+        retrievedInteractions = persistence.restoreRetrievedInteractions();
         
         api.logging().logToOutput("BurpMCP loaded successfully.");
     }
@@ -261,5 +268,10 @@ public class BurpMCP implements BurpExtension {
     public void addSavedRequest(HttpRequestResponse requestResponse, String notes) {
         savedRequestListModel.addRequest(requestResponse, ZonedDateTime.now(), notes);
         savedRequestLogsPanel.getRequestTable().updateUI();
+    }
+
+    public void saveRetrievedInteractions(List<String[]> interactions) {
+        retrievedInteractions.addAll(interactions);
+        persistence.saveRetrievedInteractions(retrievedInteractions);
     }
 }

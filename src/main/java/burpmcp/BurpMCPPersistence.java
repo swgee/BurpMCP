@@ -4,12 +4,17 @@ import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.persistence.PersistedList;
 import burp.api.montoya.persistence.PersistedObject;
 import burp.api.montoya.http.message.HttpRequestResponse;
+import burp.api.montoya.collaborator.CollaboratorClient;
+import burp.api.montoya.collaborator.SecretKey;
+import burp.api.montoya.collaborator.Interaction;
 import burpmcp.models.SavedRequestListModel;
 import burpmcp.models.SentRequestListModel;
 import burpmcp.models.ServerLogListModel;
 
 import java.time.format.DateTimeFormatter;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.List;
 /**
  * Handles persistence of BurpMCP's data within the Burp project
  */
@@ -271,5 +276,48 @@ public class BurpMCPPersistence {
         Boolean mcpServerEnabled = configObj.getBoolean("mcpServerEnabled");
 
         return new Object[] { host, port, crlfReplace != null ? crlfReplace : false, mcpServerEnabled != null ? mcpServerEnabled : false };
+    }
+
+    public CollaboratorClient restoreCollaboratorClient() {
+        String restoredSecretKey = persistedData.getString("collaboratorClientSecretKey");
+        if (restoredSecretKey == null) {
+            CollaboratorClient newCollaboratorClient = api.collaborator().createClient();
+            SecretKey newSecretKey = newCollaboratorClient.getSecretKey();
+            persistedData.setString("collaboratorClientSecretKey", newSecretKey.toString());
+            return newCollaboratorClient;
+        }
+        return api.collaborator().restoreClient(SecretKey.secretKey(restoredSecretKey));
+    }
+
+    public void saveRetrievedInteractions(List<String[]> retrievedInteractions) {
+        PersistedObject retrievedInteractionsObj = persistedData.getChildObject("retrievedInteractions");
+        if (retrievedInteractionsObj == null) {
+            retrievedInteractionsObj = PersistedObject.persistedObject();
+            persistedData.setChildObject("retrievedInteractions", retrievedInteractionsObj);
+        }
+        Integer index = 0;
+        for (String[] interaction : retrievedInteractions) {
+            PersistedList<String> interactionList = PersistedList.persistedStringList();
+            for (String field : interaction) {
+                interactionList.add(field);
+            }
+            retrievedInteractionsObj.setStringList("retrievedInteraction"+index.toString(), interactionList);
+            index++;
+        }
+    }
+
+    public List<String[]> restoreRetrievedInteractions() {
+        PersistedObject retrievedInteractionsObj = persistedData.getChildObject("retrievedInteractions");
+        if (retrievedInteractionsObj == null) {
+            return new ArrayList<>();
+        }
+        Integer index = 0;
+        List<String[]> retrievedInteractions = new ArrayList<>();
+        while (retrievedInteractionsObj.getStringList("retrievedInteraction"+index.toString()) != null) {
+            PersistedList<String> retrievedInteractionsList = retrievedInteractionsObj.getStringList("retrievedInteraction"+index.toString());
+            retrievedInteractions.add(retrievedInteractionsList.toArray(new String[0]));
+            index++;
+        }
+        return retrievedInteractions;
     }
 }

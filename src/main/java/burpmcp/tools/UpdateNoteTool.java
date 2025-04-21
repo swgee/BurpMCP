@@ -67,6 +67,7 @@ public class UpdateNoteTool {
         burpMCP.writeToServerLog("To server", exchange.getClientInfo().name() + " " + exchange.getClientInfo().version(), 
                 "Tool", "update-note", args.toString());
         
+        CallToolResult result;
         try {
             // Extract the request ID and content from arguments
             int requestId;
@@ -106,17 +107,17 @@ public class UpdateNoteTool {
             }
             
             // Create success result
-            CallToolResult result = new CallToolResult(Collections.singletonList(
+            result = new CallToolResult(Collections.singletonList(
                 new TextContent("Successfully updated note for request ID: " + requestId)), false);
             
-            burpMCP.writeToServerLog("To client", exchange.getClientInfo().name() + " " + exchange.getClientInfo().version(), 
-                    "Tool", "update-note", result.toString());
-            
-            return result;
-            
         } catch (Exception e) {
-            return new CallToolResult(Collections.singletonList(
+            result = new CallToolResult(Collections.singletonList(
                 new TextContent("ERROR: " + e.getMessage())), true);
         }
+
+        burpMCP.writeToServerLog("To client", exchange.getClientInfo().name() + " " + exchange.getClientInfo().version(), 
+                "Tool", "update-note", result.toString());
+
+        return result;
     }
 } 

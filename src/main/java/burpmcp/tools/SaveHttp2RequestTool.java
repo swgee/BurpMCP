@@ -103,6 +103,8 @@ public class SaveHttp2RequestTool {
      * @return The tool execution result
      */
     private CallToolResult handleToolCall(McpSyncServerExchange exchange, Map<String, Object> args) {
+        burpMCP.writeToServerLog("To server", exchange.getClientInfo().name()+" "+exchange.getClientInfo().version(), "Tool", "save-http2-request", new Gson().toJson(args));
+
         // Validate required parameters
         String[] requiredParams = {"body", "authority", "headers", "method", "path", "host", "port", "secure"};
         for (String param : requiredParams) {
@@ -113,7 +115,6 @@ public class SaveHttp2RequestTool {
         }
 
         CallToolResult result;
-        burpMCP.writeToServerLog("To server", exchange.getClientInfo().name()+" "+exchange.getClientInfo().version(), "Tool", "save-http2-request", new Gson().toJson(args));
         try {
             HttpRequest httpRequest = HttpUtils.buildHttp2Request(args);
             String responseStr = args.get("response") != null ? args.get("response").toString() : "";
