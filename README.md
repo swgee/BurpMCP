@@ -10,8 +10,24 @@ While other MCP servers for Burp Suite exist, they only provide generic access t
 
 Download the jar file from the releases and load it into Burp to install.
 
-The MCP server runs by default on localhost port 8181 over SSE. The configuration syntax varies depending on your MCP client, but here is an example using the [Dive](https://github.com/OpenAgentPlatform/Dive) MCP client:
+The MCP server runs by default on localhost port 8181 over SSE. The configuration syntax varies depending on your MCP client, but here are a few examples:
 
+[Cline](https://cline.bot/):
+```json
+{
+  "mcpServers": {
+    "burpmcp": {
+      "autoApprove": [],
+      "disabled": false,
+      "timeout": 30,
+      "url": "http://localhost:8181/mcp/sse",
+      "transportType": "sse"
+    }
+  }
+}
+```
+
+[Dive](https://github.com/OpenAgentPlatform/Dive):
 ```json
 {
   "mcpServers": {
@@ -23,7 +39,7 @@ The MCP server runs by default on localhost port 8181 over SSE. The configuratio
 }
 ```
 
-To use BurpMCP with Claude Desktop, download the `stdio-bridge.py` script and install the required dependencies:
+To use BurpMCP with STDIO-only clients like Claude Desktop, download the `stdio-bridge.py` script and install the required dependencies:
 
 ```sh
 pip3 install typer mcp
@@ -74,6 +90,7 @@ Thank you to the following people for providing examples:
 - The LLMs sometimes forget to add important components to requests like Content-Length headers or URL encoding. This is not an issue with the extension but rather a failure on the LLM's part. You may need to let the LLM know if it forgets something and cannot resolve the issue independently.
 - The tool parameter specifies that forbidden headers should not be included in HTTP/2 requests, but the LLMs may sometimes ignore it. If an HTTP/2 request fails, check the request for any invalid headers.
 - Sometimes, the LLM cannot send CRLFs ("\r\n") over MCP. CRLF is required for compliant HTTP/1.1 requests. To fix this, automatic LF to CRLF replacement can be enabled. However, this changes the Content-Length of the request, requiring the Content-Length header to be automatically updated. Thus, when LF to CRLF replacement is enabled, testing vulnerabilities like HTTP Request Smuggling - which requires tampering with the Content-Length header - will be difficult to perform with LLMs using HTTP/1.1.
+- Some MCP clients will not acknowledge an error response after an extended period of time and go on generating forever. Adding a custom timeout on the server side does not fix this issue. At the moment, the best solution is to use a client that supports timeouts, such as Cline.
 
 ## Tool Definitions
 
