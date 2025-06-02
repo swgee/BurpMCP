@@ -23,6 +23,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import burpmcp.tools.Http1SendTool;
 import burpmcp.tools.Http2SendTool;
+import burpmcp.tools.Http1ResendTool;
+import burpmcp.tools.Http2ResendTool;
 import burpmcp.tools.GetSavedRequestTool;
 import burpmcp.tools.UpdateNoteTool;
 import burpmcp.tools.SaveHttp1RequestTool;
@@ -86,6 +88,14 @@ public class MCPServer {
             Http2SendTool http2SendTool = new Http2SendTool(api, burpMCP);
             SyncToolSpecification http2SendToolSpec = http2SendTool.createToolSpecification();
 
+            // Create HTTP/1.1 Resend tool
+            Http1ResendTool http1ResendTool = new Http1ResendTool(api, burpMCP, savedRequestListModel);
+            SyncToolSpecification http1ResendToolSpec = http1ResendTool.createToolSpecification();
+
+            // Create HTTP/2 Resend tool
+            Http2ResendTool http2ResendTool = new Http2ResendTool(api, burpMCP, savedRequestListModel);
+            SyncToolSpecification http2ResendToolSpec = http2ResendTool.createToolSpecification();
+
             // Create Retrieve Saved Request tool
             GetSavedRequestTool retrieveSavedRequestTool = new GetSavedRequestTool(burpMCP, savedRequestListModel);
             SyncToolSpecification retrieveSavedRequestToolSpec = retrieveSavedRequestTool.createToolSpecification();
@@ -125,6 +135,8 @@ public class MCPServer {
                     .build())
                 .tool(http1SendToolSpec.tool(), http1SendToolSpec.call()) // Add HTTP/1.1 send tool
                 .tool(http2SendToolSpec.tool(), http2SendToolSpec.call()) // Add HTTP/2 send tool
+                .tool(http1ResendToolSpec.tool(), http1ResendToolSpec.call()) // Add HTTP/1.1 resend tool
+                .tool(http2ResendToolSpec.tool(), http2ResendToolSpec.call()) // Add HTTP/2 resend tool
                 .tool(retrieveSavedRequestToolSpec.tool(), retrieveSavedRequestToolSpec.call()) // Add retrieve saved request tool
                 .tool(updateNoteToolSpec.tool(), updateNoteToolSpec.call()) // Add update note tool
                 .tool(saveHttp1RequestToolSpec.tool(), saveHttp1RequestToolSpec.call()) // Add save HTTP/1.1 request tool

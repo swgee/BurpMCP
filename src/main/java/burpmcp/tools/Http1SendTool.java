@@ -3,7 +3,7 @@ package burpmcp.tools;
 import java.util.Collections;
 import java.util.Map;
 
-import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.http.HttpMode;
@@ -43,7 +43,7 @@ public class Http1SendTool {
             "properties": {
                 "data": {
                     "type": "string",
-                    "description": "Request content"
+                    "description": "Request content. For reference, HTTP/1.1 requests require CRLF line endings and two CRLFs between headers and body (even if the body is empty)."
                 },
                 "host": {
                     "type": "string",
@@ -89,9 +89,9 @@ public class Http1SendTool {
         }
 
         CallToolResult result;
-        burpMCP.writeToServerLog("To server", exchange.getClientInfo().name()+" "+exchange.getClientInfo().version(), "Tool", "http1-send", new Gson().toJson(args));
+        burpMCP.writeToServerLog("To server", exchange.getClientInfo().name()+" "+exchange.getClientInfo().version(), "http1-send", new GsonBuilder().disableHtmlEscaping().create().toJson(args));
         try {
-            HttpRequest httpRequest = HttpUtils.buildHttp1Request(args, burpMCP.crlfReplace);
+            HttpRequest httpRequest = HttpUtils.buildHttp1Request(args, burpMCP.crlfReplace, false);
             
             // Send the request using the specified HTTP mode
             HttpRequestResponse response = api.http().sendRequest(httpRequest, HttpMode.HTTP_1);
@@ -114,7 +114,7 @@ public class Http1SendTool {
             result = new CallToolResult(Collections.singletonList(
                 new TextContent("ERROR: Error sending HTTP/1.1 request: " + e.getMessage())), true);
         }
-        burpMCP.writeToServerLog("To client", exchange.getClientInfo().name()+" "+exchange.getClientInfo().version(), "Tool", "http1-send", result.toString());
+        burpMCP.writeToServerLog("To client", exchange.getClientInfo().name()+" "+exchange.getClientInfo().version(), "http1-send", result.toString());
         return result;
     }
 }

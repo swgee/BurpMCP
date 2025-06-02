@@ -11,6 +11,9 @@ import burpmcp.models.SavedRequestListModel;
 import burpmcp.models.SentRequestListModel;
 import burpmcp.models.ServerLogListModel;
 
+import javax.swing.table.TableRowSorter;
+import javax.swing.SortOrder;
+import javax.swing.RowSorter;
 import java.time.format.DateTimeFormatter;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -178,8 +181,7 @@ public class BurpMCPPersistence {
         // Create lists for the server logs data
         PersistedList<String> directions = PersistedList.persistedStringList();
         PersistedList<String> clients = PersistedList.persistedStringList();
-        PersistedList<String> capabilities = PersistedList.persistedStringList();
-        PersistedList<String> specifications = PersistedList.persistedStringList();
+        PersistedList<String> tools = PersistedList.persistedStringList();
         PersistedList<String> messageDatas = PersistedList.persistedStringList();
         PersistedList<String> times = PersistedList.persistedStringList();
         
@@ -188,8 +190,7 @@ public class BurpMCPPersistence {
             ServerLogListModel.ServerLogEntry entry = serverLogsModel.getEntry(i);
             directions.add(entry.getDirection());
             clients.add(entry.getClient());
-            capabilities.add(entry.getCapability());
-            specifications.add(entry.getSpecification());
+            tools.add(entry.getTool());
             messageDatas.add(entry.getMessageData());
             times.add(entry.getTime().format(DATE_TIME_FORMATTER));
         }
@@ -197,8 +198,7 @@ public class BurpMCPPersistence {
         // Save the lists to persistence
         serverLogsObj.setStringList("directions", directions);
         serverLogsObj.setStringList("clients", clients);
-        serverLogsObj.setStringList("capabilities", capabilities);
-        serverLogsObj.setStringList("specifications", specifications);
+        serverLogsObj.setStringList("tools", tools);
         serverLogsObj.setStringList("messageDatas", messageDatas);
         serverLogsObj.setStringList("times", times);
     }
@@ -213,17 +213,15 @@ public class BurpMCPPersistence {
         // Retrieve the lists
         PersistedList<String> directions = serverLogsObj.getStringList("directions");
         PersistedList<String> clients = serverLogsObj.getStringList("clients");
-        PersistedList<String> capabilities = serverLogsObj.getStringList("capabilities");
-        PersistedList<String> specifications = serverLogsObj.getStringList("specifications");
+        PersistedList<String> tools = serverLogsObj.getStringList("tools"); // For backward compatibility
         PersistedList<String> messageDatas = serverLogsObj.getStringList("messageDatas");
         PersistedList<String> times = serverLogsObj.getStringList("times");
         
-        // Verify all lists exist and have the same size
-        if (directions == null || clients == null || capabilities == null || 
-            specifications == null || messageDatas == null || times == null ||
-            directions.size() != clients.size() || clients.size() != capabilities.size() || 
-            capabilities.size() != specifications.size() || specifications.size() != messageDatas.size() ||
-            messageDatas.size() != times.size()) {
+        // Verify all required lists exist and have the same size
+        if (directions == null || clients == null || tools == null || 
+            messageDatas == null || times == null ||
+            directions.size() != clients.size() || clients.size() != tools.size() || 
+            tools.size() != messageDatas.size() || messageDatas.size() != times.size()) {
             return;
         }
         
@@ -233,8 +231,7 @@ public class BurpMCPPersistence {
                 ZonedDateTime.parse(times.get(i), DATE_TIME_FORMATTER),
                 directions.get(i),
                 clients.get(i),
-                capabilities.get(i),
-                specifications.get(i),
+                tools.get(i),
                 messageDatas.get(i)
             );
         }
@@ -319,5 +316,53 @@ public class BurpMCPPersistence {
             index++;
         }
         return retrievedInteractions;
+    }
+
+    /**
+     * Saves table sorting state for a specific table
+     */
+    public void saveTableSortingState(String tableKey, TableRowSorter<?> sorter) {
+        if (sorter == null) return;
+        
+        PersistedObject sortingObj = persistedData.getChildObject("tableSorting");
+        if (sortingObj == null) {
+            sortingObj = PersistedObject.persistedObject();
+            persistedData.setChildObject("tableSorting", sortingObj);
+        }
+        
+        List<? extends RowSorter.SortKey> sortKeys = sorter.getSortKeys();
+        if (sortKeys != null && !sortKeys.isEmpty()) {
+            RowSorter.SortKey primarySortKey = sortKeys.get(0);
+            sortingObj.setInteger(tableKey + "_sortColumn", primarySortKey.getColumn());
+            sortingObj.setString(tableKey + "_sortOrder", primarySortKey.getSortOrder().toString());
+        } else {
+            // Clear sorting state if no sort keys
+            sortingObj.setInteger(tableKey + "_sortColumn", -1);
+            sortingObj.setString(tableKey + "_sortOrder", "UNSORTED");
+        }
+    }
+    
+    /**
+     * Restores table sorting state for a specific table
+     */
+    public void restoreTableSortingState(String tableKey, TableRowSorter<?> sorter) {
+        if (sorter == null) return;
+        
+        PersistedObject sortingObj = persistedData.getChildObject("tableSorting");
+        if (sortingObj == null) return;
+        
+        Integer sortColumn = sortingObj.getInteger(tableKey + "_sortColumn");
+        String sortOrderStr = sortingObj.getString(tableKey + "_sortOrder");
+        
+        if (sortColumn != null && sortColumn >= 0 && sortOrderStr != null && !sortOrderStr.equals("UNSORTED")) {
+            try {
+                SortOrder sortOrder = SortOrder.valueOf(sortOrderStr);
+                List<RowSorter.SortKey> sortKeys = new ArrayList<>();
+                sortKeys.add(new RowSorter.SortKey(sortColumn, sortOrder));
+                sorter.setSortKeys(sortKeys);
+            } catch (Exception e) {
+                // Ignore invalid sort order values
+            }
+        }
     }
 }

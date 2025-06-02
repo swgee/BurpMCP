@@ -3,8 +3,6 @@ package burpmcp.tools;
 import java.util.Collections;
 import java.util.Map;
 
-import com.google.gson.Gson;
-
 import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.http.message.requests.HttpRequest;
 import burp.api.montoya.http.message.responses.HttpResponse;
@@ -16,7 +14,9 @@ import io.modelcontextprotocol.spec.McpSchema.TextContent;
 import io.modelcontextprotocol.spec.McpSchema.Tool;
 
 import burpmcp.BurpMCP;
+import burpmcp.models.SavedRequestListModel;
 import burpmcp.utils.HttpUtils;
+import com.google.gson.GsonBuilder;
 
 /**
  * A tool for sending HTTP requests via BurpMCP
@@ -87,7 +87,7 @@ public class SaveHttp1RequestTool {
      * @return The tool execution result
      */
     private CallToolResult handleToolCall(McpSyncServerExchange exchange, Map<String, Object> args) {
-        burpMCP.writeToServerLog("To server", exchange.getClientInfo().name()+" "+exchange.getClientInfo().version(), "Tool", "save-http1-request", new Gson().toJson(args));
+        burpMCP.writeToServerLog("To server", exchange.getClientInfo().name()+" "+exchange.getClientInfo().version(), "save-http1-request", new GsonBuilder().disableHtmlEscaping().create().toJson(args));
 
         // Validate required parameters
         String[] requiredParams = {"data", "host", "port", "secure"};
@@ -100,7 +100,7 @@ public class SaveHttp1RequestTool {
 
         CallToolResult result;
         try {
-            HttpRequest httpRequest = HttpUtils.buildHttp1Request(args, burpMCP.crlfReplace);
+            HttpRequest httpRequest = HttpUtils.buildHttp1Request(args, burpMCP.crlfReplace, false);
             String responseStr = args.get("response") != null ? args.get("response").toString() : "";
             HttpResponse httpResponse = HttpResponse.httpResponse(responseStr);
 
@@ -115,7 +115,7 @@ public class SaveHttp1RequestTool {
             result = new CallToolResult(Collections.singletonList(
                 new TextContent("ERROR: Error adding HTTP/1.1 request: " + e.getMessage())), true);
         }
-        burpMCP.writeToServerLog("To client", exchange.getClientInfo().name()+" "+exchange.getClientInfo().version(), "Tool", "save-http1-request", result.toString());
+        burpMCP.writeToServerLog("To client", exchange.getClientInfo().name()+" "+exchange.getClientInfo().version(), "save-http1-request", result.toString());
         return result;
     }
 }

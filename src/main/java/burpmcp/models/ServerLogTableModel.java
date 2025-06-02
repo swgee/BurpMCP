@@ -32,6 +32,8 @@ public class ServerLogTableModel extends AbstractTableModel {
     public Class<?> getColumnClass(int columnIndex) {
         if (columnIndex == 0) { // ID column
             return Integer.class;
+        } else if (columnIndex == 5) { // Size column
+            return Integer.class;
         }
         return String.class;
     }
@@ -49,9 +51,9 @@ public class ServerLogTableModel extends AbstractTableModel {
             case 3:
                 return entry.getClient();
             case 4:
-                return entry.getCapability();
+                return entry.getTool();
             case 5:
-                return entry.getSpecification();
+                return entry.getMessageData() != null ? entry.getMessageData().length() : 0;
             default:
                 return null;
         }

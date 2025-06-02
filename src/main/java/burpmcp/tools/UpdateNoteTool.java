@@ -65,7 +65,7 @@ public class UpdateNoteTool {
      */
     private CallToolResult handleToolCall(McpSyncServerExchange exchange, Map<String, Object> args) {
         burpMCP.writeToServerLog("To server", exchange.getClientInfo().name() + " " + exchange.getClientInfo().version(), 
-                "Tool", "update-note", args.toString());
+                "update-note", args.toString());
         
         CallToolResult result;
         try {
@@ -116,7 +116,7 @@ public class UpdateNoteTool {
         }
 
         burpMCP.writeToServerLog("To client", exchange.getClientInfo().name() + " " + exchange.getClientInfo().version(), 
-                "Tool", "update-note", result.toString());
+                "update-note", result.toString());
 
         return result;
     }

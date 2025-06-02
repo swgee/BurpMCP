@@ -130,12 +130,19 @@ public class BurpMCP implements BurpExtension {
         tabbedPane.addTab("Saved Requests", savedRequestLogsPanel);
         
         // Create Request Logs tab
-        requestLogsPanel = new SentRequestLogsPanel(api, sentRequestListModel);
+        requestLogsPanel = new SentRequestLogsPanel(api, sentRequestListModel, this);
         tabbedPane.addTab("Request Logs", requestLogsPanel);
         
-        // Create Server Logs tab
-        serverLogsPanel = new ServerLogsPanel(serverLogListModel);
+        // Create Server Logs tab - now passing the api parameter
+        serverLogsPanel = new ServerLogsPanel(api, serverLogListModel);
         tabbedPane.addTab("Server Logs", serverLogsPanel);
+        
+        // Restore table sorting states after all panels are created and data is loaded
+        SwingUtilities.invokeLater(() -> {
+            savedRequestLogsPanel.restoreTableSortingState();
+            requestLogsPanel.restoreTableSortingState();
+            serverLogsPanel.restoreTableSortingState();
+        });
         
         // Add the control panel at the top
         JPanel controlPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
@@ -255,8 +262,8 @@ public class BurpMCP implements BurpExtension {
         return panel;
     }
 
-    public void writeToServerLog(String direction, String client, String capability, String specification, String messageData) {
-        serverLogListModel.addLog(ZonedDateTime.now(), direction, client, capability, specification, messageData);
+    public void writeToServerLog(String direction, String client, String tool, String messageData) {
+        serverLogListModel.addLog(ZonedDateTime.now(), direction, client, tool, messageData);
         serverLogsPanel.getServerLogTable().updateUI();
     }
     

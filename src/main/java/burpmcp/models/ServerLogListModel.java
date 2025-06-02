@@ -18,8 +18,8 @@ public class ServerLogListModel {
         this.tableModel = tableModel;
     }
 
-    public void addLog(ZonedDateTime time, String direction, String client, String capability, String specification, String messageData) {
-        ServerLogEntry entry = new ServerLogEntry(nextId++, time, direction, client, capability, specification, messageData);
+    public void addLog(ZonedDateTime time, String direction, String client, String tool, String messageData) {
+        ServerLogEntry entry = new ServerLogEntry(nextId++, time, direction, client, tool, messageData);
         logs.add(entry);
         if (tableModel != null) {
             tableModel.fireTableRowsInserted(logs.size() - 1, logs.size() - 1);
@@ -47,18 +47,16 @@ public class ServerLogListModel {
         private final ZonedDateTime time;
         private final String direction;
         private final String client;
-        private final String capability;
-        private final String specification;
+        private final String tool;
         private final String messageData;
 
-        public ServerLogEntry(int id, ZonedDateTime time, String direction, String client, String capability, 
-                             String specification, String messageData) {
+        public ServerLogEntry(int id, ZonedDateTime time, String direction, String client, 
+                             String tool, String messageData) {
             this.id = id;
             this.time = time;
             this.direction = direction;
             this.client = client;
-            this.capability = capability;
-            this.specification = specification;
+            this.tool = tool;
             this.messageData = messageData;
         }
 
@@ -78,12 +76,8 @@ public class ServerLogListModel {
             return client;
         }
 
-        public String getCapability() {
-            return capability;
-        }
-
-        public String getSpecification() {
-            return specification;
+        public String getTool() {
+            return tool;
         }
 
         public String getMessageData() {

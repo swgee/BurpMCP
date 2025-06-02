@@ -81,8 +81,8 @@ public class RetrieveCollaboratorInteractionsTool {
      * @return The tool execution result
      */
     private CallToolResult handleToolCall(McpSyncServerExchange exchange, Map<String, Object> args) {
-        burpMCP.writeToServerLog("To server", exchange.getClientInfo().name() + " " + exchange.getClientInfo().version(), 
-                "Tool", "retrieve-collaborator-interactions", args.toString());
+        burpMCP.writeToServerLog("To server", exchange.getClientInfo().name() + " " + exchange.getClientInfo().version(),
+                "retrieve-collaborator-interactions", args.toString());
         
         CallToolResult result;
         try {
@@ -165,8 +165,8 @@ public class RetrieveCollaboratorInteractionsTool {
                 new TextContent("ERROR: " + e.getMessage())), true);
         }
 
-        burpMCP.writeToServerLog("To client", exchange.getClientInfo().name() + " " + exchange.getClientInfo().version(), 
-        "Tool", "retrieve-collaborator-interactions", result.toString());    
+        burpMCP.writeToServerLog("To client", exchange.getClientInfo().name() + " " + exchange.getClientInfo().version(),
+                "retrieve-collaborator-interactions", result.toString());    
         
         return result;
     }

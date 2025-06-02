@@ -32,7 +32,11 @@ public class SentRequestTableModel extends AbstractTableModel {
     public Class<?> getColumnClass(int columnIndex) {
         if (columnIndex == 0) { // ID column
             return Integer.class;
-        } else if (columnIndex == 6 || columnIndex == 7) { // Status and Response Length columns
+        } else if (columnIndex == 3) { // Port column
+            return Integer.class;
+        } else if (columnIndex == 4) { // Secure column
+            return String.class;
+        } else if (columnIndex == 8 || columnIndex == 9) { // Status and Response Length columns
             return Integer.class;
         }
         return String.class;
@@ -49,18 +53,22 @@ public class SentRequestTableModel extends AbstractTableModel {
             case 2:
                 return entry.getRequestResponse().httpService().host();
             case 3:
+                return entry.getRequestResponse().httpService().port();
+            case 4:
+                return entry.getRequestResponse().httpService().secure() ? "✓" : "";
+            case 5:
                 try {
                     return entry.getRequestResponse().request().method();
                 } catch (Exception e) {
                     return "";
                 }
-            case 4:
+            case 6:
                 try {
                     return entry.getRequestResponse().request().pathWithoutQuery();
                 } catch (Exception e) {
                     return "";
                 }
-            case 5:
+            case 7:
                 try {
                     String path = entry.getRequestResponse().request().path();
                     int queryIndex = path.indexOf('?');
@@ -68,14 +76,14 @@ public class SentRequestTableModel extends AbstractTableModel {
                 } catch (Exception e) {
                     return "";
                 }
-            case 6:
+            case 8:
                 try {
                     return entry.getRequestResponse().hasResponse() ? 
                            entry.getRequestResponse().response().statusCode() : "";
                 } catch (Exception e) {
                     return "";
                 }
-            case 7:
+            case 9:
                 try {
                     return entry.getRequestResponse().hasResponse() ? 
                            entry.getRequestResponse().response().body().length() : "";

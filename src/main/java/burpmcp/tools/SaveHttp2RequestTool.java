@@ -3,8 +3,6 @@ package burpmcp.tools;
 import java.util.Collections;
 import java.util.Map;
 
-import com.google.gson.Gson;
-
 import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.http.message.requests.HttpRequest;
 import burp.api.montoya.http.message.responses.HttpResponse;
@@ -16,7 +14,9 @@ import io.modelcontextprotocol.spec.McpSchema.TextContent;
 import io.modelcontextprotocol.spec.McpSchema.Tool;
 
 import burpmcp.BurpMCP;
+import burpmcp.models.SavedRequestListModel;
 import burpmcp.utils.HttpUtils;
+import com.google.gson.GsonBuilder;
 
 /**
  * A tool for sending HTTP requests via BurpMCP
@@ -50,8 +50,22 @@ public class SaveHttp2RequestTool {
                     "description": "Authority part of the request - the Host header value of HTTP/2 requests"
                 },
                 "headers": {
-                    "type": "string",
-                    "description": "Newline separated additional HTTP headers. Don't use invalid headers according to the HTTP/2 specification (Connection, Keep-Alive, Proxy-Connection, Transfer-Encoding, Upgrade)."
+                    "type": "array",
+                    "description": "Additional HTTP headers as an array of header objects. For reference, the following headers are invalid according to the HTTP/2 specification: Connection, Keep-Alive, Proxy-Connection, Transfer-Encoding, Upgrade. Also, each cookie is its own header.",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": {
+                                "type": "string",
+                                "description": "Header name"
+                            },
+                            "value": {
+                                "type": "string", 
+                                "description": "Header value"
+                            }
+                        },
+                        "required": ["name", "value"]
+                    }
                 },
                 "method": {
                     "type": "string",
@@ -103,7 +117,7 @@ public class SaveHttp2RequestTool {
      * @return The tool execution result
      */
     private CallToolResult handleToolCall(McpSyncServerExchange exchange, Map<String, Object> args) {
-        burpMCP.writeToServerLog("To server", exchange.getClientInfo().name()+" "+exchange.getClientInfo().version(), "Tool", "save-http2-request", new Gson().toJson(args));
+        burpMCP.writeToServerLog("To server", exchange.getClientInfo().name()+" "+exchange.getClientInfo().version(), "save-http2-request", new GsonBuilder().disableHtmlEscaping().create().toJson(args));
 
         // Validate required parameters
         String[] requiredParams = {"body", "authority", "headers", "method", "path", "host", "port", "secure"};
@@ -116,7 +130,7 @@ public class SaveHttp2RequestTool {
 
         CallToolResult result;
         try {
-            HttpRequest httpRequest = HttpUtils.buildHttp2Request(args);
+            HttpRequest httpRequest = HttpUtils.buildHttp2Request(args, false);
             String responseStr = args.get("response") != null ? args.get("response").toString() : "";
             HttpResponse httpResponse = HttpResponse.httpResponse(responseStr);
 
@@ -131,7 +145,7 @@ public class SaveHttp2RequestTool {
             result = new CallToolResult(Collections.singletonList(
                 new TextContent("ERROR: Error adding HTTP/2 request: " + e.getMessage())), true);
         }
-        burpMCP.writeToServerLog("To client", exchange.getClientInfo().name()+" "+exchange.getClientInfo().version(), "Tool", "save-http2-request", result.toString());
+        burpMCP.writeToServerLog("To client", exchange.getClientInfo().name()+" "+exchange.getClientInfo().version(), "save-http2-request", result.toString());
         return result;
     }
 }

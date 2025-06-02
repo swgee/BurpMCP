@@ -55,8 +55,8 @@ public class GenerateCollaboratorPayloadTool {
      * @return The tool execution result
      */
     private CallToolResult handleToolCall(McpSyncServerExchange exchange, Map<String, Object> args) {
-        burpMCP.writeToServerLog("To server", exchange.getClientInfo().name() + " " + exchange.getClientInfo().version(), 
-                "Tool", "generate-collaborator-payload", args.toString());
+        burpMCP.writeToServerLog("To server", exchange.getClientInfo().name() + " " + exchange.getClientInfo().version(),
+                "generate-collaborator-payload", args.toString());
         
         CallToolResult result;
         try {
@@ -70,8 +70,8 @@ public class GenerateCollaboratorPayloadTool {
                 new TextContent("ERROR: " + e.getMessage())), true);
         }
 
-        burpMCP.writeToServerLog("To client", exchange.getClientInfo().name() + " " + exchange.getClientInfo().version(), 
-        "Tool", "generate-collaborator-payload", result.toString());
+        burpMCP.writeToServerLog("To client", exchange.getClientInfo().name() + " " + exchange.getClientInfo().version(),
+                "generate-collaborator-payload", result.toString());
 
         return result;
     }

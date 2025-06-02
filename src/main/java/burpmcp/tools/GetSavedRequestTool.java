@@ -65,7 +65,7 @@ public class GetSavedRequestTool {
      */
     private CallToolResult handleToolCall(McpSyncServerExchange exchange, Map<String, Object> args) {
         burpMCP.writeToServerLog("To server", exchange.getClientInfo().name() + " " + exchange.getClientInfo().version(), 
-                "Tool", "get-saved-request", args.toString());
+                "get-saved-request", args.toString());
         
         CallToolResult result;
         try {
@@ -99,8 +99,10 @@ public class GetSavedRequestTool {
                     new TextContent("ERROR: Request ID not found: " + requestId)), true);
             }
             
-            // Get the request, response, and notes data
             HttpRequestResponse requestResponse = entry.getRequestResponse();
+            String requestHost = requestResponse.httpService().host();
+            String requestPort = String.valueOf(requestResponse.httpService().port());
+            String requestProtocol = requestResponse.httpService().secure() ? "HTTPS" : "HTTP";
             String requestContent = requestResponse.request().toString();
             
             String responseContent = requestResponse.hasResponse() ? 
@@ -110,9 +112,12 @@ public class GetSavedRequestTool {
             
             // Combine the data into a single response
             StringBuilder combinedContent = new StringBuilder();
-            combinedContent.append("=== REQUEST ===\n");
+            combinedContent.append("=== REQUEST DATA ===\n");
+            combinedContent.append("Host: " + requestHost + "\n");
+            combinedContent.append("Port: " + requestPort + "\n");
+            combinedContent.append("Protocol: " + requestProtocol + "\n");
             combinedContent.append(requestContent);
-            combinedContent.append("\n\n=== RESPONSE ===\n");
+            combinedContent.append("\n\n=== RESPONSE DATA ===\n");
             combinedContent.append(responseContent);
             combinedContent.append("\n\n=== NOTES ===\n");
             combinedContent.append(notes);
@@ -126,7 +131,7 @@ public class GetSavedRequestTool {
         }
 
         burpMCP.writeToServerLog("To client", exchange.getClientInfo().name() + " " + exchange.getClientInfo().version(), 
-                "Tool", "get-saved-request", result.toString());
+                "get-saved-request", result.toString());
 
         return result;
     }
