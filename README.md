@@ -104,12 +104,12 @@ Thank you to the following for providing examples:
 
 ## Limitations
 
-- When LF to CRLF replacement is enabled, testing for HTTP/1.1 request smuggling will be challenging is the Content-Length header is automatically updated to reflect the additional characters
+- When LF to CRLF replacement is enabled, testing for HTTP/1.1 request smuggling will be challenging since the Content-Length header is automatically updated to reflect the additional characters.
 - When resending requests over HTTP/2, the headers are joined by newlines and re-split before the request is sent. Also, cookies are split into their own headers. This makes any sort of HTTP/2 protocol vulnerability testing like request smuggling difficult if newlines need to be manually injected into header values. 
 
 ## Tool Definitions
 
-The tool specifications can be found in [src/main/java/burpmcp/tools](src/main/java/burpmcp/tools) and describe exactly what data the MCP server expects from the LLMs. This information is important to understand so you know what the models are sending. Depending on your use case, you can modify the property descriptions, which would require rebuilding the extension.
+The tool specifications can be found in [src/main/java/burpmcp/tools](src/main/java/burpmcp/tools) and describe exactly what data the MCP server expects from the client. This information is important to understand so you know what the models are sending. Depending on your use case, you can modify the property descriptions, which would require rebuilding the extension.
 
 ## Building from Source
 
