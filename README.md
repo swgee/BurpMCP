@@ -1,5 +1,7 @@
 # BurpMCP
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/swgee/BurpMCP)
+
 ![BurpMCP Logo](assets/cover_image.png)
 
 BurpMCP is a Burp Suite extension that augments application security testers, vulnerability researchers, and bug bounty hunters with modern AI. Every day, large language models gain larger context windows, faster response times, and improved knowledge and reasoning skills. BurpMCP lets you take advantage of these capabilities while testing HTTP-based applications, providing a super-intelligent sidekick to help navigate unfamiliar attack surfaces and chase down complex vulnerabilities.
