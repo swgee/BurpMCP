@@ -2,13 +2,13 @@ name: Build and attach JAR to release
 
 on:
   release:
-    types: [created]
+    types: [published]
 
 jobs:
   build-and-upload:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
     steps:
       - name: Check out code
         uses: actions/checkout@v4
@@ -23,18 +23,12 @@ jobs:
       - name: Build with Maven
         run: mvn -B -ntp -DskipTests package
 
-      - name: Rename JAR to BurpMCP.jar
-        shell: bash
-        run: |
-          set -euo pipefail
-          FILE=$(ls target/*-jar-with-dependencies.jar | head -n 1)
-          cp "$FILE" target/BurpMCP.jar
-
       - name: Upload asset to release
-        uses: softprops/action-gh-release@v0.2.1
+        uses: Shopify/upload-to-release@c77c9b3e5d288adaef98a7007bf92340ec6ce03b
         with:
-          files: target/BurpMCP.jar
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: BurpMCP.jar
+          path: target/burpmcp-1.0-jar-with-dependencies.jar
+          content-type: application/java-archive
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
 
 
