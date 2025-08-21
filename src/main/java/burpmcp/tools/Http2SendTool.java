@@ -50,7 +50,7 @@ public class Http2SendTool {
                 },
                 "headers": {
                     "type": "array",
-                    "description": "Additional HTTP headers as an array of header objects. For reference, the following headers are invalid according to the HTTP/2 specification: Connection, Keep-Alive, Proxy-Connection, Transfer-Encoding, Upgrade. Also, each cookie is its own header.",
+                    "description": "Additional HTTP headers as an array of header objects. For reference, the following headers are invalid according to the HTTP/2 specification: Connection, Keep-Alive, Proxy-Connection, Transfer-Encoding, Upgrade. Also, cookies should be separated only by a semicolon (no space).",
                     "items": {
                         "type": "object",
                         "properties": {

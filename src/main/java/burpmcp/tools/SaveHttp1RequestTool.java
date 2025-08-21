@@ -63,7 +63,7 @@ public class SaveHttp1RequestTool {
                 },
                 "response": {
                     "type": "string",
-                    "description": "Response content"
+                    "description": "Full HTTP response data (headers and body)"
                 }
             },
             "required": ["data", "host", "port", "secure"]

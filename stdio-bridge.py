@@ -10,6 +10,7 @@ import logging
 import sys
 import typer
 from typing import Any, Optional
+from pydantic import BaseModel
 from urllib.parse import urlparse
 from mcp import (
     ClientSession, 
@@ -32,6 +33,11 @@ logger = logging.getLogger("mcp-bridge")
 
 app = typer.Typer()
 
+class OutboundNotification(BaseModel):
+    """Minimal model with method/params for BaseSession.send_notification."""
+    method: str
+    params: Optional[Any] = None
+
 class MCPBridge:
     """
     Bidirectional bridge between STDIO client and SSE server
@@ -53,6 +59,47 @@ class MCPBridge:
             raise ValueError(f"Invalid server URL: {server_url}")
             
         logger.info(f"Initializing bridge to server: {server_url}")
+
+    @staticmethod
+    def _to_plain_params(params: Any) -> Any:
+        """Convert params to plain JSON-serializable structure if needed."""
+        try:
+            if params is None:
+                return None
+            if hasattr(params, "model_dump"):
+                return params.model_dump(by_alias=True, exclude_none=True)
+            return params
+        except Exception:
+            return params
+
+    @staticmethod
+    def _extract_method_and_params(notification_obj: Any) -> tuple[Optional[str], Any]:
+        """Best-effort extraction of method and params from various notification shapes."""
+        obj = getattr(notification_obj, "root", notification_obj)
+
+        # Direct attributes
+        method = getattr(obj, "method", None)
+        params = getattr(obj, "params", None)
+        if method is not None:
+            return method, MCPBridge._to_plain_params(params)
+
+        # Pydantic model
+        if hasattr(obj, "model_dump"):
+            try:
+                dumped = obj.model_dump(by_alias=True, exclude_none=True)
+                method = dumped.get("method")
+                params = dumped.get("params")
+                return method, MCPBridge._to_plain_params(params)
+            except Exception:
+                pass
+
+        # Dict-like
+        if isinstance(obj, dict):
+            method = obj.get("method")
+            params = obj.get("params")
+            return method, MCPBridge._to_plain_params(params)
+
+        return None, None
 
     async def handle_client_request(
         self, 
@@ -103,9 +150,20 @@ class MCPBridge:
             raise RuntimeError("Client session not initialized")
 
         try:
-            # Forward the notification to the SSE server
-            await self._client_session.send_notification(notification)
-            logger.debug(f"Forwarded client notification: {notification.root.method}")
+            # Extract the notification data and forward it properly
+            if hasattr(notification, 'root') and notification.root:
+                method, params = self._extract_method_and_params(notification)
+                try:
+                    if method is not None:
+                        outbound = OutboundNotification(method=method, params=params)
+                        await self._client_session.send_notification(outbound)
+                        logger.info(f"Forwarded client notification: {method}")
+                    else:
+                        logger.warning("Client notification missing method; skipping forward")
+                except Exception as send_err:
+                    logger.error(f"Failed forwarding client notification: {send_err}", exc_info=True)
+            else:
+                logger.warning("Received notification without proper root data")
         except Exception as e:
             logger.error(f"Error handling client notification: {e}", exc_info=True)
 
@@ -159,9 +217,20 @@ class MCPBridge:
             raise RuntimeError("Server session not initialized")
 
         try:
-            # Forward the notification to the STDIO client
-            await self._server_session.send_notification(notification)
-            logger.debug(f"Forwarded server notification: {notification.root.method}")
+            # Extract the notification data and forward it properly
+            if hasattr(notification, 'root') and notification.root:
+                method, params = self._extract_method_and_params(notification)
+                try:
+                    if method is not None:
+                        outbound = OutboundNotification(method=method, params=params)
+                        await self._server_session.send_notification(outbound)
+                        logger.info(f"Forwarded server notification: {method}")
+                    else:
+                        logger.warning("Server notification missing method; skipping forward")
+                except Exception as send_err:
+                    logger.error(f"Failed forwarding server notification: {send_err}", exc_info=True)
+            else:
+                logger.warning("Received notification without proper root data")
         except Exception as e:
             logger.error(f"Error handling server notification: {e}", exc_info=True)
 

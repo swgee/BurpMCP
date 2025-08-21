@@ -32,6 +32,13 @@ import burpmcp.tools.SaveHttp2RequestTool;
 import burpmcp.models.SavedRequestListModel;
 import burpmcp.tools.GenerateCollaboratorPayloadTool;
 import burpmcp.tools.RetrieveCollaboratorInteractionsTool;
+
+import java.time.Duration;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import io.netty.channel.ChannelOption;
+
 public class MCPServer {
     private final MontoyaApi api;
     private final BurpMCP burpMCP;
@@ -46,6 +53,8 @@ public class MCPServer {
     private reactor.netty.DisposableServer reactorServer;
     private SavedRequestListModel savedRequestListModel;
     private Http1SendTool http1SendTool;
+    private volatile long lastClientActivity = System.currentTimeMillis();
+    private ScheduledExecutorService heartbeatExecutor;
     
     public MCPServer(MontoyaApi api, BurpMCP burpMCP) {
         this.api = api;
@@ -164,6 +173,9 @@ public class MCPServer {
             HttpServer httpServer = HttpServer.create()
                 .host(serverHost)
                 .port(serverPort)
+                .option(ChannelOption.SO_KEEPALIVE, true)
+                .childOption(ChannelOption.SO_KEEPALIVE, true)
+                .idleTimeout(Duration.ofMinutes(30))  // Connection timeout
                 .wiretap(true);  // Enables wiretap for debugging
             
             // Bind and store the server instance
@@ -186,6 +198,27 @@ public class MCPServer {
             api.logging().logToOutput("- Message endpoint: " + messageUrl);
             
             isRunning = true;
+            
+            // Schedule periodic heartbeat to keep connections alive
+            ScheduledExecutorService heartbeatExecutor = Executors.newSingleThreadScheduledExecutor(r -> {
+                Thread t = new Thread(r, "MCP-Heartbeat");
+                t.setDaemon(true);
+                return t;
+            });
+
+            heartbeatExecutor.scheduleAtFixedRate(() -> {
+                try {
+                    if (syncServer != null && isRunning) {
+                        syncServer.loggingNotification(LoggingMessageNotification.builder()
+                            .level(LoggingLevel.DEBUG)
+                            .logger("burp-mcp-server")
+                            .data("heartbeat-" + System.currentTimeMillis())
+                            .build());
+                    }
+                } catch (Exception e) {
+                    logger.debug("Heartbeat failed", e);
+                }
+            }, 60, 60, TimeUnit.SECONDS); // Send heartbeat every 60 seconds
             
         } catch (Exception e) {
             // Log the error for debugging
@@ -239,6 +272,18 @@ public class MCPServer {
         } catch (Exception e) {
             logger.error("Error during cleanup", e);
         }
+        if (heartbeatExecutor != null) {
+            heartbeatExecutor.shutdown();
+            try {
+                if (!heartbeatExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
+                    heartbeatExecutor.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                heartbeatExecutor.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
+            heartbeatExecutor = null;
+        }
     }
 
     public boolean isRunning() {
@@ -255,5 +300,18 @@ public class MCPServer {
 
     public Http1SendTool getHttp1SendTool() {
         return http1SendTool;
+    }
+
+    public void restart() {
+        if (isRunning) {
+            api.logging().logToOutput("Restarting MCP Server...");
+            stop();
+            try {
+                Thread.sleep(1000); // Brief pause
+                start();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
     }
 }
